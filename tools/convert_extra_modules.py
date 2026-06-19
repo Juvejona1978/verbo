@@ -46,12 +46,32 @@ def convert_bible(src,outroot):
     dump(module/'manifest.json',{'schemaVersion':2,'id':'rv1960-strong','type':'bible','name':'Reina-Valera 1960 con Strong','abbreviation':'RV1960+','language':'es','year':1960,'hasStrongs':True,'sourceFormat':'MySword SQLite','books':books})
     con.close()
 
+
+def strip_html_text(s):
+    return re.sub(r'<[^>]+>', ' ', html.unescape(str(s or '')))
+
+def infer_commentary_verse_end(content, chapter, verse_start, verse_end):
+    plain = strip_html_text(content)
+    ch = int(chapter)
+    start = int(verse_start or 1)
+    end = int(verse_end or start)
+    pattern = re.compile(r'(^|[^\d])' + re.escape(str(ch)) + r'\.(\d{1,3})(?:\s*[-–—]\s*(\d{1,3}))?(?:\s*,\s*(\d{1,3}))?(ss)?')
+    for m in pattern.finditer(plain):
+        values = [int(m.group(2))]
+        if m.group(3): values.append(int(m.group(3)))
+        if m.group(4): values.append(int(m.group(4)))
+        for v in values:
+            if v >= start and v <= 176:
+                end = max(end, v)
+    return end
+
 def convert_commentary(src,outroot):
     con=sqlite3.connect(src); d=details(con,'details')
     module=outroot/'modules/commentaries/matthew-henry-es'; books=[]; grouped={}
     for rid,b,c,fv,tv,data in con.execute('SELECT id,book,chapter,fromverse,toverse,data FROM commentary ORDER BY book,chapter,fromverse'):
         bid=BOOKS[b-1][0]
-        grouped.setdefault(bid,[]).append({'id':f'mh-{rid}','title':f'{BOOKS[b-1][1]} {c}:{fv}' + (f'–{tv}' if tv!=fv else ''),'author':'Matthew Henry','reference':{'book':bid,'chapterStart':c,'verseStart':fv,'chapterEnd':c,'verseEnd':tv},'content':data})
+        tv2 = infer_commentary_verse_end(data, c, fv, tv)
+        grouped.setdefault(bid,[]).append({'id':f'mh-{rid}','title':f'{BOOKS[b-1][1]} {c}:{fv}' + (f'–{tv2}' if tv2!=fv else ''),'author':'Matthew Henry','reference':{'book':bid,'chapterStart':c,'verseStart':fv,'chapterEnd':c,'verseEnd':tv2},'content':data})
     for n,(bid,name) in enumerate(BOOKS,1):
         file=f'books/{bid}.json'; books.append({'id':bid,'name':name,'number':n,'file':file})
         dump(module/file,{'schemaVersion':1,'book':bid,'entries':grouped.get(bid,[])})

@@ -668,12 +668,57 @@ button:focus-visible,
 .app-loading { opacity:.55; pointer-events:none; }
 .module-notice { margin:0 0 18px; padding:10px 12px; border:1px solid var(--rule); border-radius:8px; font-size:12px; color:var(--sepia); background:rgba(201,166,107,.08); }
 @media (max-width: 720px) {
-  .app-header { align-items:flex-start; }
-  .app-header__nav { flex-wrap:wrap; gap:8px; }
-  .version-picker { order:1; }
-  .passage-picker { order:2; width:100%; }
-  .passage-picker__select--book { flex:1; max-width:none; }
-  .search-trigger { order:3; display:none; }
+  .app-header {
+    align-items: stretch;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .app-header__brand {
+    min-width: 0;
+  }
+
+  .app-header__nav {
+    width: 100%;
+    flex-wrap: nowrap;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .app-header__nav > * {
+    flex: 0 0 auto;
+  }
+
+  .version-picker { order: 1; }
+  .version-picker__select { max-width: 145px; }
+
+  .passage-picker {
+    order: 2;
+    width: auto;
+    flex-wrap: nowrap;
+  }
+
+  .passage-picker__select--book {
+    flex: 0 0 145px;
+    max-width: 145px;
+  }
+
+  .passage-picker__select--chapter {
+    flex: 0 0 72px;
+  }
+
+  .passage-picker__button {
+    flex: 0 0 34px;
+  }
+
+  .search-trigger {
+    order: 3;
+    display: flex;
+  }
 }
 
 /* Strong y diccionario */

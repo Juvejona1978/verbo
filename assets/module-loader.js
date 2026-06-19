@@ -104,11 +104,31 @@ const VerboModules = (() => {
     bibleResults.forEach(({manifest:m})=>versions[m.id]={label:m.abbreviation,full:m.name,year:m.year,hasStrongs:Boolean(m.hasStrongs)});
     const allVerseNumbers=[...new Set(bibleResults.flatMap(b=>Object.keys(b.verses).map(Number)))].sort((a,b)=>a-b);
     const notes={}, notesByVerse=new Map();
+    const firstVerse=allVerseNumbers[0] || 1;
+    const lastVerse=allVerseNumbers[allVerseNumbers.length-1] || firstVerse;
     commentaryResults.forEach(c=>c.entries.forEach(entry=>{
-      const ref=entry.reference, start=ref.verseStart, end=ref.verseEnd ?? start;
-      if(!Number.isInteger(start)) return;
-      const id=entry.id||`${c.manifest.id}-${bookId}-${chapter}-${start}`;
-      notes[id]={title:entry.title||`${c.manifest.name}: ${start}`,author:entry.author||c.manifest.name,body:entry.content||''};
+      const ref=entry.reference || {};
+      const chStart=Number(ref.chapterStart ?? chapter);
+      const chEnd=Number(ref.chapterEnd ?? chStart);
+      if(chapter < chStart || chapter > chEnd) return;
+
+      let start=Number(ref.verseStart);
+      let end=Number(ref.verseEnd ?? ref.verseStart);
+
+      // MySword y otros comentarios usan versículo 0 para introducciones de libro/capítulo.
+      // En Verbo se anclan al primer versículo visible para que no queden escondidas.
+      if(!Number.isInteger(start) || start <= 0) start = firstVerse;
+      if(!Number.isInteger(end) || end <= 0) end = start;
+
+      // Si el comentario cruza capítulos, se ajusta al capítulo actual.
+      if(chapter > chStart) start = firstVerse;
+      if(chapter < chEnd) end = lastVerse;
+
+      start=Math.max(firstVerse, Math.min(start,lastVerse));
+      end=Math.max(start, Math.min(end,lastVerse));
+
+      const id=entry.id||`${c.manifest.id}-${bookId}-${chapter}-${start}-${end}`;
+      notes[id]={title:entry.title||`${c.manifest.name}: ${start}${end!==start?'–'+end:''}`,author:entry.author||c.manifest.name,body:entry.content||''};
       for(let v=start;v<=end;v++){ if(!notesByVerse.has(v)) notesByVerse.set(v,[]); notesByVerse.get(v).push(id); }
     }));
     const verses=allVerseNumbers.map(n=>{

@@ -180,12 +180,44 @@ function parseStrongSegments(raw){
  return out;
 }
 
+function inferCommentaryVerseRange(content, chapter, from, to){
+ // Algunos comentarios MySword guardan todo el capítulo en una sola fila
+ // marcada como versículo 1, pero dentro del texto traen referencias como
+ // 1.1, 1.1-17, 1.18-25. Esta función amplía el rango para que Verbo
+ // no esconda esos comentarios en los versículos siguientes.
+ const plain=stripHtml(content||'');
+ const ch=Number(chapter), start=Number(from)||1;
+ let end=Number(to)||start;
+ const esc=String(ch).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+ const re=new RegExp(`(^|[^\\d])${esc}\\.(\\d{1,3})(?:\\s*[-–—]\\s*(\\d{1,3}))?(?:\\s*,\\s*(\\d{1,3}))?(ss)?`, 'g');
+ let m;
+ while((m=re.exec(plain))){
+  const v1=Number(m[2]), v2=m[3]?Number(m[3]):v1, v3=m[4]?Number(m[4]):null;
+  if(Number.isInteger(v1)&&v1>=start&&v1<=176) end=Math.max(end,v1);
+  if(Number.isInteger(v2)&&v2>=v1&&v2<=176) end=Math.max(end,v2);
+  if(Number.isInteger(v3)&&v3>=v1&&v3<=176) end=Math.max(end,v3);
+ }
+ return Math.max(start,end);
+}
+
 async function convertCommentary(root){
- const rows=query(state.db,'SELECT * FROM commentary ORDER BY book,chapter,fromverse');const grouped=new Map();let i=0;
- for(const r of rows){const n=+r.book;const b=BOOKS[n-1]||{id:`B${n}`,name:`Libro ${n}`,number:n};if(!grouped.has(n))grouped.set(n,[]);const from=+r.fromverse||0,to=+r.toverse||from;grouped.get(n).push({id:`${slug(els.id.value)}-${r.id??i+1}`,title:`${b.name} ${r.chapter}:${from}${to!==from?'–'+to:''}`,author:els.author.value.trim()||pick('author'),reference:{book:b.id,chapterStart:+r.chapter,verseStart:from,chapterEnd:+r.chapter,verseEnd:to},content:normalizeHtml(r.data)});i++}
+ const rows=query(state.db,'SELECT * FROM commentary ORDER BY book,chapter,fromverse');const grouped=new Map();let i=0;let expanded=0;
+ for(const r of rows){
+  const n=+r.book;const b=BOOKS[n-1]||{id:`B${n}`,name:`Libro ${n}`,number:n};if(!grouped.has(n))grouped.set(n,[]);
+  let from=Number(r.fromverse);
+  let to=Number(r.toverse);
+  const isIntro=!Number.isInteger(from)||from<=0;
+  if(isIntro) from=1;
+  if(!Number.isInteger(to)||to<=0) to=from;
+  const inferredTo=inferCommentaryVerseRange(r.data,+r.chapter,from,to);
+  if(inferredTo>to){to=inferredTo;expanded++}
+  const title=isIntro?`${b.name} ${r.chapter} — Introducción`:`${b.name} ${r.chapter}:${from}${to!==from?'–'+to:''}`;
+  grouped.get(n).push({id:`${slug(els.id.value)}-${r.id??i+1}`,title,author:els.author.value.trim()||pick('author'),reference:{book:b.id,chapterStart:+r.chapter,verseStart:from,chapterEnd:+r.chapter,verseEnd:to},content:normalizeHtml(r.data)});i++
+ }
  const folder=root.folder('books');const manifest={...baseManifest(),books:[]};let done=0;
  for(const [n,entries]of grouped){const b=BOOKS[n-1]||{id:`B${n}`,name:`Libro ${n}`,number:n};folder.file(`${b.id}.json`,stringify({schemaVersion:2,book:b.id,name:b.name,entries}));manifest.books.push({...b,file:`books/${b.id}.json`});done++;setProgress(8+Math.round(done/grouped.size*78),`Convirtiendo ${b.name}…`);await yieldUI()}
- root.file('manifest.json',stringify(manifest));return{type:'commentary',inputEntries:rows.length,books:manifest.books.length,outputFiles:manifest.books.length+2,warnings:[]}
+ const warnings=[];if(manifest.books.length<66)warnings.push('El módulo contiene menos de 66 libros.');if(expanded)warnings.push(`${expanded} comentario(s) ampliados por referencias internas detectadas en el texto.`);
+ root.file('manifest.json',stringify(manifest));return{type:'commentary',inputEntries:rows.length,books:manifest.books.length,expandedRanges:expanded,outputFiles:manifest.books.length+2,warnings}
 }
 
 async function convertDictionary(root){
