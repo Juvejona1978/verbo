@@ -30,6 +30,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   let commentSyncTimer = null;
   let searchState = null;
   let currentCommentary = localStorage.getItem('verbo:lastCommentary') || null;
+  let currentDictionary = localStorage.getItem('verbo:lastDictionary') || null;
+  let currentExegesis = localStorage.getItem('verbo:lastExegesis') || null;
   let currentBook = localStorage.getItem('verbo:lastBook') || 'ROM';
   let currentChapter = Number(localStorage.getItem('verbo:lastChapter')) || 7;
   const themes = [
@@ -47,7 +49,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const activeVerse = () => Number(document.querySelector('.verse--active')?.dataset.verseN) || null;
   const escapeHTML = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[ch]));
   const bibleCatalog = () => catalog.bibles.map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path }));
-  const commentaryCatalog = () => (catalog.commentaries || []).map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path }));
+  const commentaryCatalog = () => (catalog.commentaries || []).map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest }));
+  const dictionaryCatalog = () => (catalog.dictionaries || []).map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest, linked:Boolean(item.manifest.books?.length) }));
+  const exegesisCatalog = () => (catalog.exegesis || []).map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest }));
   const bookAbbr = { GEN:'Gn', EXO:'Ex', LEV:'Lv', NUM:'Nm', DEU:'Dt', JOS:'Jos', JDG:'Jue', RUT:'Rt', '1SA':'1 S', '2SA':'2 S', '1KI':'1 R', '2KI':'2 R', '1CH':'1 Cr', '2CH':'2 Cr', EZR:'Esd', NEH:'Neh', EST:'Est', JOB:'Job', PSA:'Sal', PRO:'Pr', ECC:'Ec', SNG:'Cnt', ISA:'Is', JER:'Jer', LAM:'Lm', EZK:'Ez', DAN:'Dn', HOS:'Os', JOL:'Jl', AMO:'Am', OBA:'Abd', JON:'Jon', MIC:'Mi', NAM:'Nah', HAB:'Hab', ZEP:'Sof', HAG:'Hag', ZEC:'Zac', MAL:'Mal', MAT:'Mt', MRK:'Mc', LUK:'Lc', JHN:'Jn', ACT:'Hch', ROM:'Ro', '1CO':'1 Cor', '2CO':'2 Cor', GAL:'Gá', EPH:'Ef', PHP:'Fil', COL:'Col', '1TH':'1 Tes', '2TH':'2 Tes', '1TI':'1 Ti', '2TI':'2 Ti', TIT:'Tit', PHM:'Flm', HEB:'Heb', JAS:'Stg', '1PE':'1 P', '2PE':'2 P', '1JN':'1 Jn', '2JN':'2 Jn', '3JN':'3 Jn', JUD:'Jud', REV:'Ap' };
   const compactRef = (bookId=currentBook, chapter=currentChapter, verses=[]) => {
     const sorted=[...new Set(verses.map(Number))].sort((a,b)=>a-b);
@@ -74,6 +78,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     catalog = await VerboModules.getCatalog();
     populateBooks();
     if (!commentaryCatalog().some(c => c.id === currentCommentary)) currentCommentary = commentaryCatalog()[0]?.id || null;
+    if (!dictionaryCatalog().some(c => c.id === currentDictionary)) currentDictionary = dictionaryCatalog()[0]?.id || null;
+    if (!exegesisCatalog().some(c => c.id === currentExegesis)) currentExegesis = exegesisCatalog()[0]?.id || null;
     if (!catalog.books.some(b => b.id === currentBook)) currentBook = catalog.books[0].id;
     els.book.value = currentBook;
     await refreshChapters();
@@ -175,6 +181,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // En móvil el panel invade la lectura; el usuario lo abre manualmente desde el botón lateral.
     if (activeTab === 'comentario') renderPanel('comentario', firstNote);
     if (activeTab === 'comparar') renderCompare(verse.n);
+    if (activeTab === 'diccionario') renderPanel('diccionario', verse.n);
+    if (activeTab === 'exegesis') renderPanel('exegesis', verse.n);
   }
 
   function updateSelectionToolbar(){
@@ -238,8 +246,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       if(focus) scrollCommentToNote(focus);
     }
     if(tab==='comparar'){ els.panelTitle.textContent='Comparar versiones'; renderCompare(focus||activeVerse()); }
-    if(tab==='diccionario'){ els.panelTitle.textContent='Diccionario'; els.panelBody.innerHTML=emptyState('🔤','Pulsa un código Strong en una Biblia compatible para consultar su definición.'); }
+    if(tab==='diccionario') renderDictionaryPanel(focus || activeVerse());
     if(tab==='notas') renderNotes();
+    if(tab==='exegesis') renderExegesis(focus || activeVerse());
     if(tab==='tema') renderTheme();
     if(tab==='buscar') renderSearch();
   }
@@ -404,6 +413,97 @@ document.addEventListener('DOMContentLoaded', async () => {
     }));
   }
 
+
+  function referenceCoversVerse(entry, verseNumber){
+    if(!verseNumber) return false;
+    const ref = entry.reference || {};
+    const chStart = Number(ref.chapterStart ?? currentChapter);
+    const chEnd = Number(ref.chapterEnd ?? chStart);
+    if(currentChapter < chStart || currentChapter > chEnd) return false;
+    let start = Number(ref.verseStart);
+    let end = Number(ref.verseEnd ?? ref.verseStart);
+    if(!Number.isInteger(start) || start <= 0) start = 1;
+    if(!Number.isInteger(end) || end <= 0) end = start;
+    if(currentChapter > chStart) start = 1;
+    if(currentChapter < chEnd) end = 999;
+    return verseNumber >= start && verseNumber <= end;
+  }
+
+  function renderLinkedResourceEntries(resource, entries, focus, emptyIcon='📚', emptyText='Este capítulo todavía no tiene entradas cargadas.'){
+    if(!entries.length){ els.panelBody.innerHTML=emptyState(emptyIcon, emptyText); return; }
+    els.panelBody.innerHTML=entries.map((entry,index)=>{
+      const id=entry.id || `${resource.manifest.id}-${currentBook}-${currentChapter}-${index}`;
+      const title=entry.title || `${resource.manifest.name}: ${entry.reference?.verseStart || currentChapter}`;
+      const body=entry.content || entry.html || entry.definition || entry.data || '';
+      const active = referenceCoversVerse(entry, focus) ? ' note-card--active' : '';
+      return `<div class="note-card${active}" data-linked-id="${escapeHTML(id)}" data-linked-index="${index}">
+        <div class="note-card__ref">${escapeHTML(data.meta.book)} ${data.meta.chapter}${entry.reference?.verseStart ? ':'+escapeHTML(entry.reference.verseStart) : ''}</div>
+        <div class="note-card__title">${escapeHTML(title)}</div>
+        <div class="note-card__author">${escapeHTML(entry.author || resource.manifest.name)}</div>
+        <button class="note-card__copy" type="button" data-copy-linked="${index}">Copiar</button>
+        <div class="note-card__body">${body}</div>
+      </div>`;
+    }).join('');
+    els.panelBody.querySelectorAll('[data-copy-linked]').forEach(btn=>btn.addEventListener('click',()=>{
+      const entry=entries[Number(btn.dataset.copyLinked)];
+      if(!entry) return;
+      const body=entry.content || entry.html || entry.definition || entry.data || '';
+      copyToClipboard(`${entry.title || resource.manifest.name}\n${String(body).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()}`);
+    }));
+    if(focus){
+      const target=[...els.panelBody.querySelectorAll('[data-linked-index]')].find(card=>referenceCoversVerse(entries[Number(card.dataset.linkedIndex)], focus));
+      target?.scrollIntoView({block:'start'});
+    }
+  }
+
+  async function renderDictionaryPanel(focus=null){
+    els.panelTitle.textContent='Diccionario';
+    const installed=dictionaryCatalog();
+    if(!installed.length){ els.panelToolbar.innerHTML=''; els.panelBody.innerHTML=emptyState('📚','No hay diccionarios instalados todavía.'); return; }
+    if(!installed.some(d=>d.id===currentDictionary)) currentDictionary=installed[0].id;
+    const selected=installed.find(d=>d.id===currentDictionary) || installed[0];
+    const options=installed.map(d=>`<option value="${d.id}" ${d.id===currentDictionary?'selected':''}>${escapeHTML(d.label)}</option>`).join('');
+    els.panelToolbar.innerHTML=`<div class="compare-toolbar"><span class="compare-toolbar__label">Diccionario</span><select class="compare-toolbar__select" id="dictionarySelect">${options}</select></div>`;
+    document.getElementById('dictionarySelect')?.addEventListener('change', e=>{
+      currentDictionary=e.target.value;
+      localStorage.setItem('verbo:lastDictionary', currentDictionary);
+      renderDictionaryPanel(activeVerse());
+    });
+    if(selected.linked){
+      els.panelBody.innerHTML=emptyState('⌛','Cargando diccionario del pasaje…');
+      try{
+        const resource=await VerboModules.loadLinkedEntries(selected.path,currentBook,currentChapter);
+        renderLinkedResourceEntries(resource, resource.entries, focus, '📚', 'Este capítulo no tiene entradas en este diccionario.');
+      }catch(error){ console.error(error); els.panelBody.innerHTML=emptyState('⚠️','No se pudo abrir este diccionario.'); }
+      return;
+    }
+    els.panelBody.innerHTML=emptyState('🔤','Pulsa un código Strong en una Biblia compatible para consultar este diccionario.');
+  }
+
+  async function renderExegesis(focus=null){
+    els.panelTitle.textContent='Exégesis';
+    const installed=exegesisCatalog();
+    if(!installed.length){
+      els.panelToolbar.innerHTML='';
+      els.panelBody.innerHTML=emptyState('✍️','La sección Exégesis está lista. Cuando agregues módulos en modules/exegesis, aparecerán aquí.');
+      return;
+    }
+    if(!installed.some(e=>e.id===currentExegesis)) currentExegesis=installed[0].id;
+    const selected=installed.find(e=>e.id===currentExegesis) || installed[0];
+    const options=installed.map(e=>`<option value="${e.id}" ${e.id===currentExegesis?'selected':''}>${escapeHTML(e.label)}</option>`).join('');
+    els.panelToolbar.innerHTML=`<div class="compare-toolbar"><span class="compare-toolbar__label">Exégesis</span><select class="compare-toolbar__select" id="exegesisSelect">${options}</select></div>`;
+    document.getElementById('exegesisSelect')?.addEventListener('change', e=>{
+      currentExegesis=e.target.value;
+      localStorage.setItem('verbo:lastExegesis', currentExegesis);
+      renderExegesis(activeVerse());
+    });
+    els.panelBody.innerHTML=emptyState('⌛','Cargando exégesis…');
+    try{
+      const resource=await VerboModules.loadLinkedEntries(selected.path,currentBook,currentChapter);
+      renderLinkedResourceEntries(resource, resource.entries, focus, '✍️', 'Este capítulo todavía no tiene exégesis cargada.');
+    }catch(error){ console.error(error); els.panelBody.innerHTML=emptyState('⚠️','No se pudo abrir esta exégesis.'); }
+  }
+
   function renderNotes(){
     els.panelTitle.textContent='Mis notas';
     const key=`nota:${data.meta.bookId}-${data.meta.chapter}`, saved=localStorage.getItem(key)||'';
@@ -414,12 +514,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function openDictionary(code){
     openPanel('diccionario');
+    const installed=dictionaryCatalog();
+    if(!installed.some(d=>d.id===currentDictionary)) currentDictionary=installed[0]?.id || null;
     els.panelTitle.textContent=`Diccionario · ${code}`;
+    if(installed.length){
+      const options=installed.map(d=>`<option value="${d.id}" ${d.id===currentDictionary?'selected':''}>${escapeHTML(d.label)}</option>`).join('');
+      els.panelToolbar.innerHTML=`<div class="compare-toolbar"><span class="compare-toolbar__label">Diccionario</span><select class="compare-toolbar__select" id="dictionarySelect">${options}</select></div>`;
+      document.getElementById('dictionarySelect')?.addEventListener('change', e=>{
+        currentDictionary=e.target.value;
+        localStorage.setItem('verbo:lastDictionary', currentDictionary);
+        openDictionary(code);
+      });
+    }
     els.panelBody.innerHTML=emptyState('⌛','Buscando entrada…');
     try{
-      const result=await VerboModules.getDictionaryEntry(code);
-      if(!result){ els.panelBody.innerHTML=emptyState('🔎',`No se encontró una entrada para ${code}.`); return; }
-      const html=result.entry.html||result.entry.definition||'';
+      const result=await VerboModules.getDictionaryEntry(code, currentDictionary);
+      if(!result){ els.panelBody.innerHTML=emptyState('🔎',`No se encontró una entrada para ${code} en el diccionario seleccionado.`); return; }
+      const html=result.entry.html||result.entry.definition||result.entry.content||'';
       els.panelBody.innerHTML=`<article class="dict-entry"><div class="dict-entry__term">${result.code}</div><div class="dict-entry__source">${result.manifest.name}</div><button class="note-card__copy" id="copyDictEntry" type="button">Copiar diccionario</button><div class="dict-entry__def">${html}</div></article>`;
       document.getElementById('copyDictEntry')?.addEventListener('click',()=>copyToClipboard(`${result.code}\n${String(html).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()}`));
       els.panelBody.querySelectorAll('a.strong').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();const m=(a.getAttribute('href')||'').match(/[GH]\d+/i);if(m)openDictionary(m[0].toUpperCase());}));

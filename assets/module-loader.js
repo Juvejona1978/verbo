@@ -28,7 +28,9 @@ const VerboModules = (() => {
     if (!bibles.length) throw new Error('No hay Biblias disponibles en modules/registry.json');
     const primary = bibles.find(x => x.manifest.id === registry.defaultBible) || bibles[0];
     const commentaries = await loadModuleList(registry.commentaries || []);
-    return { registry, bibles, commentaries, primary, books: primary.manifest.books };
+    const dictionaries = await loadModuleList(registry.dictionaries || []);
+    const exegesis = await loadModuleList(registry.exegesis || []);
+    return { registry, bibles, commentaries, dictionaries, exegesis, primary, books: primary.manifest.books };
   }
   async function getBookInfo(bookId) {
     const catalog = await getCatalog();
@@ -55,11 +57,14 @@ const VerboModules = (() => {
       return chapter >= start && chapter <= end;
     }) };
   }
-  async function getDictionaryEntry(code) {
+  async function getDictionaryEntry(code, dictionaryId=null) {
     const registry = await getJSON('modules/registry.json');
     const normalized = String(code || '').toUpperCase();
     const prefix = /^[GH]/.test(normalized) ? normalized[0] : 'OTHER';
-    for (const path of (registry.dictionaries || [])) {
+    const dictionaryPaths = dictionaryId
+      ? (registry.dictionaries || []).filter(path => path.includes(`/` + dictionaryId + `/`) || path.endsWith(`/` + dictionaryId + `/manifest.json`))
+      : (registry.dictionaries || []);
+    for (const path of dictionaryPaths) {
       const manifestPath=`modules/${path}`;
       let manifest;
       try {
@@ -80,6 +85,21 @@ const VerboModules = (() => {
     }
     return null;
   }
+
+  async function loadLinkedEntries(manifestPath, bookId, chapter) {
+    const manifest = await getJSON(manifestPath);
+    const bookInfo = manifest.books?.find(book => book.id === bookId);
+    if (!bookInfo) return { manifest, entries:[] };
+    const bookData = await getJSON(resolveFromManifest(manifestPath, bookInfo.file));
+    const entries = (bookData.entries || []).filter(entry => {
+      const ref = entry.reference || {};
+      const start = Number(ref.chapterStart ?? chapter);
+      const end = Number(ref.chapterEnd ?? start);
+      return chapter >= start && chapter <= end;
+    });
+    return { manifest, entries };
+  }
+
   async function searchBible(manifestPath, query, { testament='all', onProgress=null }={}) {
     const manifest = await getJSON(manifestPath);
     const needle = String(query || '').trim().toLocaleLowerCase('es');
@@ -166,5 +186,5 @@ const VerboModules = (() => {
     const first=bibleResults.find(b=>b.manifest.id===registry.defaultBible)||bibleResults[0];
     return {meta:{book:first.bookInfo.name,bookId,chapter,version:first.manifest.id,versionFull:first.manifest.name},versions,verses,notes};
   }
-  return { getCatalog,getBookInfo,buildChapterData,loadBible,loadCommentary,getDictionaryEntry,searchBible };
+  return { getCatalog,getBookInfo,buildChapterData,loadBible,loadCommentary,loadLinkedEntries,getDictionaryEntry,searchBible };
 })();
