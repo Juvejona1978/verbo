@@ -10,11 +10,24 @@ const VerboModules = (() => {
   function resolveFromManifest(manifestPath, relativePath) {
     return manifestPath.slice(0, manifestPath.lastIndexOf('/') + 1) + relativePath;
   }
+  async function tryLoadModule(path) {
+    const manifestPath = `modules/${path}`;
+    try {
+      return { path: manifestPath, manifest: await getJSON(manifestPath) };
+    } catch (error) {
+      console.warn(`Módulo omitido: ${manifestPath}`, error);
+      return null;
+    }
+  }
+  async function loadModuleList(paths = []) {
+    return (await Promise.all(paths.map(tryLoadModule))).filter(Boolean);
+  }
   async function getCatalog() {
     const registry = await getJSON('modules/registry.json');
-    const bibles = await Promise.all(registry.bibles.map(async path => ({ path:`modules/${path}`, manifest:await getJSON(`modules/${path}`) })));
+    const bibles = await loadModuleList(registry.bibles || []);
+    if (!bibles.length) throw new Error('No hay Biblias disponibles en modules/registry.json');
     const primary = bibles.find(x => x.manifest.id === registry.defaultBible) || bibles[0];
-    const commentaries = await Promise.all((registry.commentaries || []).map(async path => ({ path:`modules/${path}`, manifest:await getJSON(`modules/${path}`) })));
+    const commentaries = await loadModuleList(registry.commentaries || []);
     return { registry, bibles, commentaries, primary, books: primary.manifest.books };
   }
   async function getBookInfo(bookId) {
@@ -46,8 +59,15 @@ const VerboModules = (() => {
     const registry = await getJSON('modules/registry.json');
     const normalized = String(code || '').toUpperCase();
     const prefix = /^[GH]/.test(normalized) ? normalized[0] : 'OTHER';
-    for (const path of registry.dictionaries) {
-      const manifestPath=`modules/${path}`, manifest=await getJSON(manifestPath);
+    for (const path of (registry.dictionaries || [])) {
+      const manifestPath=`modules/${path}`;
+      let manifest;
+      try {
+        manifest = await getJSON(manifestPath);
+      } catch (error) {
+        console.warn(`Diccionario omitido: ${manifestPath}`, error);
+        continue;
+      }
       if (manifest.entryFiles) {
         const file=manifest.entryFiles[prefix] || manifest.entryFiles.OTHER;
         if (!file) continue;
@@ -93,13 +113,19 @@ const VerboModules = (() => {
   }
   async function buildChapterData({ bookId='ROM', chapter=7, commentaryId=null }={}) {
     const registry = await getJSON('modules/registry.json');
-    const bibleResults=(await Promise.all(registry.bibles.map(path=>loadBible(`modules/${path}`,bookId,chapter)))).filter(Boolean);
+    const bibleResults=(await Promise.all((registry.bibles || []).map(async path=>{
+      try { return await loadBible(`modules/${path}`,bookId,chapter); }
+      catch (error) { console.warn(`Biblia omitida: modules/${path}`, error); return null; }
+    }))).filter(Boolean);
     if (!bibleResults.length) throw new Error(`No hay Biblias disponibles para ${bookId} ${chapter}`);
     const commentaryPaths=(registry.commentaries || []);
     const selectedPaths=commentaryId
       ? commentaryPaths.filter(path => path.includes(`/` + commentaryId + `/`) || path.endsWith(`/` + commentaryId + `/manifest.json`))
       : commentaryPaths.slice(0,1);
-    const commentaryResults=await Promise.all(selectedPaths.map(path=>loadCommentary(`modules/${path}`,bookId,chapter)));
+    const commentaryResults=(await Promise.all(selectedPaths.map(async path=>{
+      try { return await loadCommentary(`modules/${path}`,bookId,chapter); }
+      catch (error) { console.warn(`Comentario omitido: modules/${path}`, error); return null; }
+    }))).filter(Boolean);
     const versions={};
     bibleResults.forEach(({manifest:m})=>versions[m.id]={label:m.abbreviation,full:m.name,year:m.year,hasStrongs:Boolean(m.hasStrongs)});
     const allVerseNumbers=[...new Set(bibleResults.flatMap(b=>Object.keys(b.verses).map(Number)))].sort((a,b)=>a-b);

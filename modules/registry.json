@@ -1,1 +1,16 @@
-{"schemaVersion":2,"defaultBible":"rvg-2004","bibles":["bibles/rvg-2004/manifest.json","bibles/junemann/manifest.json","bibles/rv1960-strong/manifest.json"],"commentaries":["commentaries/matthew-henry-es/manifest.json","commentaries/comentarios-de-la-biblia-del-diario-vivir/manifest.json","commentaries/lbla/manifest.json"],"dictionaries":["dictionaries/multilexico/manifest.json"]}
+{
+  "schemaVersion": 2,
+  "defaultBible": "rvg-2004",
+  "bibles": [
+    "bibles/rvg-2004/manifest.json",
+    "bibles/rv1960-strong/manifest.json"
+  ],
+  "commentaries": [
+    "commentaries/matthew-henry-es/manifest.json",
+    "commentaries/comentarios-de-la-biblia-del-diario-vivir/manifest.json",
+    "commentaries/lbla/manifest.json"
+  ],
+  "dictionaries": [
+    "dictionaries/multilexico/manifest.json"
+  ]
+}
