@@ -120,7 +120,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.verse--active').forEach(x=>x.classList.remove('verse--active'));
     row.classList.add('verse--active');
     const firstNote=verse.noteIds?.[0]||null;
-    if (!activeTab && verse.hasNote) return openPanel('comentario', firstNote);
+    // No abrir comentarios automáticamente al tocar un versículo.
+    // En móvil el panel invade la lectura; el usuario lo abre manualmente desde el botón lateral.
     if (activeTab === 'comentario') renderPanel('comentario', firstNote);
     if (activeTab === 'comparar') renderCompare(verse.n);
   }
