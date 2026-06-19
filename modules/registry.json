@@ -3,7 +3,9 @@
   "defaultBible": "rvg-2004",
   "bibles": [
     "bibles/rvg-2004/manifest.json",
-    "bibles/rv1960-strong/manifest.json"
+    "bibles/rv1960-strong/manifest.json",
+    "bibles/biblia-en-lenguaje-sencillo/manifest.json",
+    "bibles/junemann/manifest.json"
   ],
   "commentaries": [
     "commentaries/matthew-henry-es/manifest.json",

@@ -209,12 +209,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const installed=commentaryCatalog();
       if(installed.length){
         const options=installed.map(c=>`<option value="${c.id}" ${c.id===currentCommentary?'selected':''}>${escapeHTML(c.label)}</option>`).join('');
-        els.panelToolbar.innerHTML=`<div class="compare-toolbar"><span class="compare-toolbar__label">Comentario</span><select class="compare-toolbar__select" id="commentarySelect">${options}</select><button class="mini-copy-button" id="copyVisibleComment" type="button">Copiar</button></div>`;
-        document.getElementById('copyVisibleComment')?.addEventListener('click',()=>{
-          const activeId = data?.verses?.find(v=>v.n===activeVerse())?.noteIds?.[0];
-          const note = activeId ? data.notes[activeId] : Object.values(data.notes)[0];
-          if(note) copyToClipboard(`${note.title}\n${String(note.body).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()}`);
-        });
+        els.panelToolbar.innerHTML=`<div class="compare-toolbar"><span class="compare-toolbar__label">Comentario</span><select class="compare-toolbar__select" id="commentarySelect">${options}</select></div>`;
         document.getElementById('commentarySelect')?.addEventListener('change', async e=>{
           currentCommentary=e.target.value;
           localStorage.setItem('verbo:lastCommentary', currentCommentary);
