@@ -532,7 +532,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       }catch(error){ console.error(error); els.panelBody.innerHTML=emptyState('⚠️','No se pudo abrir este diccionario.'); }
       return;
     }
-    await renderDictionaryLibrary(selected);
+    if(selected.id==='barclay') await renderDictionaryLibrary(selected);
+    else els.panelBody.innerHTML=emptyState('🔤','Pulsa un código Strong en una Biblia compatible para consultar este diccionario.');
   }
 
   async function renderExegesis(focus=null){

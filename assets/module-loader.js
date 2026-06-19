@@ -77,10 +77,12 @@ const VerboModules = (() => {
         const file=manifest.entryFiles[prefix] || manifest.entryFiles.OTHER;
         if (!file) continue;
         const data=await getJSON(resolveFromManifest(manifestPath,file));
-        if (data.entries?.[normalized]) return { manifest, code:normalized, entry:data.entries[normalized] };
+        const entry=(data.entries || data)?.[normalized];
+        if (entry) return { manifest, code:normalized, entry:typeof entry==='string'?{html:entry}:entry };
       } else if (manifest.entriesFile) {
         const data=await getJSON(resolveFromManifest(manifestPath,manifest.entriesFile));
-        if (data.entries?.[normalized]) return { manifest, code:normalized, entry:data.entries[normalized] };
+        const entry=(data.entries || data)?.[normalized];
+        if (entry) return { manifest, code:normalized, entry:typeof entry==='string'?{html:entry}:entry };
       }
     }
     return null;
@@ -100,11 +102,11 @@ const VerboModules = (() => {
         if(manifest.entryFiles){
           for(const file of Object.values(manifest.entryFiles)){
             const data=await getJSON(resolveFromManifest(manifestPath,file));
-            Object.assign(entries,data.entries||{});
+            Object.assign(entries,data.entries||data||{});
           }
         } else if(manifest.entriesFile){
           const data=await getJSON(resolveFromManifest(manifestPath,manifest.entriesFile));
-          Object.assign(entries,data.entries||{});
+          Object.assign(entries,data.entries||data||{});
         }
         resources.push({manifest,entries});
       } catch(error){ console.warn(`Diccionario omitido: ${manifestPath}`,error); }
