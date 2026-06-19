@@ -23,12 +23,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   let currentBook = localStorage.getItem('verbo:lastBook') || 'ROM';
   let currentChapter = Number(localStorage.getItem('verbo:lastChapter')) || 7;
   const themes = [
-    { id:'paper', label:'Papel cálido', sample:'#F6F0E4' },
-    { id:'cream', label:'Crema claro', sample:'#FBF7EC' },
-    { id:'sage', label:'Verde salvia', sample:'#F1F6EF' },
-    { id:'mist', label:'Azul niebla', sample:'#F1F6F8' },
-    { id:'pearl', label:'Gris perla', sample:'#F5F4F1' },
-    { id:'sand', label:'Rosa arena', sample:'#F8F1EE' }
+    { id:'paper', label:'Papel cálido', sample:'#F1E3C8' },
+    { id:'cream', label:'Crema dorada', sample:'#F5E7C8' },
+    { id:'sage', label:'Verde oliva', sample:'#DDE8D1' },
+    { id:'mist', label:'Azul noche suave', sample:'#DDEAF1' },
+    { id:'pearl', label:'Gris perla', sample:'#ECE9E2' },
+    { id:'sand', label:'Rosa arena', sample:'#F1DCD6' },
+    { id:'mint', label:'Menta', sample:'#D8F3EA' },
+    { id:'rosewood', label:'Palo rosa', sample:'#F2D7DF' }
   ];
 
   const emptyState = (icon, text) => `<div class="panel-empty"><div class="panel-empty__icon">${icon}</div><div class="panel-empty__text">${text}</div></div>`;

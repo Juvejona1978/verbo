@@ -6,16 +6,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Lora:ital,wght@0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --paper: #F6F0E4;
-  --paper-raised: #FDFAF4;
-  --ink: #3A2E22;
-  --ink-soft: #5C4B3A;
-  --sepia: #9C8264;
-  --wine: #7A2E2E;
-  --wine-soft: #A85050;
-  --rule: #E8DDC6;
-  --rule-strong: #D8C8A8;
-  --gold-glow: #C9A66B;
+  --paper: #F1E3C8;
+  --paper-raised: #FFF8EA;
+  --ink: #3A2A1D;
+  --ink-soft: #604632;
+  --sepia: #9B7450;
+  --wine: #7A2B30;
+  --wine-soft: #A84D55;
+  --rule: #E0CDAA;
+  --rule-strong: #CBB486;
+  --gold-glow: #C89F58;
 
   --font-display: 'Lora', serif;
   --font-body: 'Source Serif 4', serif;
@@ -860,64 +860,88 @@ button:focus-visible,
 
 /* Ajuste v13: selector de tema visual suave */
 body[data-theme="cream"] {
-  --paper: #FBF7EC;
-  --paper-raised: #FFFDF7;
-  --ink: #352D23;
-  --ink-soft: #5B4D3E;
-  --sepia: #9A8061;
-  --wine: #78313A;
-  --wine-soft: #A25259;
-  --rule: #E9DDC7;
-  --rule-strong: #D7C6A7;
-  --gold-glow: #C9A15E;
+  --paper: #F5E7C8;
+  --paper-raised: #FFF8E8;
+  --ink: #382915;
+  --ink-soft: #604726;
+  --sepia: #A0743F;
+  --wine: #7D3034;
+  --wine-soft: #A84F55;
+  --rule: #E3CF9F;
+  --rule-strong: #CDB27B;
+  --gold-glow: #C99A45;
 }
 body[data-theme="sage"] {
-  --paper: #F1F6EF;
-  --paper-raised: #FBFEF8;
-  --ink: #2F352A;
-  --ink-soft: #56604C;
-  --sepia: #77876A;
-  --wine: #4F6F50;
-  --wine-soft: #739374;
-  --rule: #DDE8D8;
-  --rule-strong: #C6D6BE;
-  --gold-glow: #B9A663;
+  --paper: #DDE8D1;
+  --paper-raised: #F5FAEF;
+  --ink: #26311F;
+  --ink-soft: #4F6243;
+  --sepia: #6F835E;
+  --wine: #42663F;
+  --wine-soft: #6E9569;
+  --rule: #C9DABB;
+  --rule-strong: #AFC39E;
+  --gold-glow: #B6A04E;
 }
 body[data-theme="mist"] {
-  --paper: #F1F6F8;
-  --paper-raised: #FBFEFF;
-  --ink: #2D3338;
-  --ink-soft: #52606A;
-  --sepia: #6F8490;
-  --wine: #426B7A;
-  --wine-soft: #6992A1;
-  --rule: #D9E7EC;
-  --rule-strong: #C1D5DE;
-  --gold-glow: #B9A76C;
+  --paper: #DDEAF1;
+  --paper-raised: #F4FBFF;
+  --ink: #22313A;
+  --ink-soft: #485F6D;
+  --sepia: #5F7F90;
+  --wine: #2F667B;
+  --wine-soft: #5F91A6;
+  --rule: #C8DDE8;
+  --rule-strong: #ABC8D6;
+  --gold-glow: #BCA35F;
 }
 body[data-theme="pearl"] {
-  --paper: #F5F4F1;
-  --paper-raised: #FFFFFF;
-  --ink: #33302B;
-  --ink-soft: #5B554D;
-  --sepia: #81776A;
-  --wine: #6D4F5E;
-  --wine-soft: #927386;
-  --rule: #E3E0D9;
-  --rule-strong: #CDC7BA;
-  --gold-glow: #BFA366;
+  --paper: #ECE9E2;
+  --paper-raised: #FCFBF8;
+  --ink: #2E2922;
+  --ink-soft: #585045;
+  --sepia: #7B6F5F;
+  --wine: #6B485A;
+  --wine-soft: #936E83;
+  --rule: #D8D1C4;
+  --rule-strong: #BFB5A4;
+  --gold-glow: #BFA05B;
 }
 body[data-theme="sand"] {
-  --paper: #F8F1EE;
-  --paper-raised: #FFFDFC;
-  --ink: #382C28;
-  --ink-soft: #604D46;
-  --sepia: #9A7B70;
-  --wine: #8A4650;
-  --wine-soft: #B66B73;
-  --rule: #EBDCD5;
-  --rule-strong: #D9C2B8;
-  --gold-glow: #C7A365;
+  --paper: #F1DCD6;
+  --paper-raised: #FFF5F1;
+  --ink: #3A2723;
+  --ink-soft: #64473F;
+  --sepia: #9A6E62;
+  --wine: #8A3E4A;
+  --wine-soft: #B5626E;
+  --rule: #E0C3BA;
+  --rule-strong: #CDA79C;
+  --gold-glow: #C99C57;
+}
+body[data-theme="mint"] {
+  --paper: #D8F3EA;
+  --paper-raised: #F3FFF9;
+  --ink: #1F3D37;
+  --ink-soft: #3F665D;
+  --sepia: #5D9083;
+  --wine: #2F7C72;
+  --wine-soft: #54A99D;
+  --rule: #BFE3D7;
+  --rule-strong: #9DCDC0;
+  --gold-glow: #B6A85D;
+}
+body[data-theme="rosewood"] {
+  --paper: #F2D7DF;
+  --paper-raised: #FFF2F5;
+  --ink: #432C34;
+  --ink-soft: #674650;
+  --sepia: #9A6A76;
+  --wine: #8B3F5A;
+  --wine-soft: #BF6B83;
+  --rule: #E1BCCA;
+  --rule-strong: #C99CAD;
+  --gold-glow: #C49A5B;
 }
 .theme-panel { padding: 2px 0 10px; }
 .theme-panel__intro {
