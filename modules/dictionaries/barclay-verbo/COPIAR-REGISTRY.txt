@@ -1,0 +1,2 @@
+Copia registry.json en la carpeta modules/ de Verbo, reemplazando el archivo anterior.
+El módulo debe copiarse en la carpeta indicada por su tipo.
