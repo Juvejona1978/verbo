@@ -86,6 +86,32 @@ const VerboModules = (() => {
     return null;
   }
 
+  async function loadDictionaryEntries(dictionaryId=null) {
+    const registry = await getJSON('modules/registry.json');
+    const paths = dictionaryId
+      ? (registry.dictionaries || []).filter(path => path.includes(`/` + dictionaryId + `/`) || path.endsWith(`/` + dictionaryId + `/manifest.json`))
+      : (registry.dictionaries || []);
+    const resources=[];
+    for (const path of paths) {
+      const manifestPath=`modules/${path}`;
+      try {
+        const manifest=await getJSON(manifestPath);
+        const entries={};
+        if(manifest.entryFiles){
+          for(const file of Object.values(manifest.entryFiles)){
+            const data=await getJSON(resolveFromManifest(manifestPath,file));
+            Object.assign(entries,data.entries||{});
+          }
+        } else if(manifest.entriesFile){
+          const data=await getJSON(resolveFromManifest(manifestPath,manifest.entriesFile));
+          Object.assign(entries,data.entries||{});
+        }
+        resources.push({manifest,entries});
+      } catch(error){ console.warn(`Diccionario omitido: ${manifestPath}`,error); }
+    }
+    return resources;
+  }
+
   async function loadLinkedEntries(manifestPath, bookId, chapter) {
     const manifest = await getJSON(manifestPath);
     const bookInfo = manifest.books?.find(book => book.id === bookId);
@@ -186,5 +212,5 @@ const VerboModules = (() => {
     const first=bibleResults.find(b=>b.manifest.id===registry.defaultBible)||bibleResults[0];
     return {meta:{book:first.bookInfo.name,bookId,chapter,version:first.manifest.id,versionFull:first.manifest.name},versions,verses,notes};
   }
-  return { getCatalog,getBookInfo,buildChapterData,loadBible,loadCommentary,loadLinkedEntries,getDictionaryEntry,searchBible };
+  return { getCatalog,getBookInfo,buildChapterData,loadBible,loadCommentary,loadLinkedEntries,getDictionaryEntry,loadDictionaryEntries,searchBible };
 })();

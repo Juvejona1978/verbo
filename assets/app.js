@@ -456,6 +456,61 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  const bibleNameAliases = {
+    GEN:['gen','genesis','génesis','gn'], EXO:['exo','exodo','éxodo','ex'], LEV:['lev','levitico','levítico','lv'], NUM:['num','numeros','números','nm'], DEU:['deu','deuteronomio','dt'],
+    JOS:['jos','josue','josué'], JDG:['jdg','jue','jueces'], RUT:['rut','rt'], '1SA':['1sa','1 sam','1sam','1 s'], '2SA':['2sa','2 sam','2sam','2 s'], '1KI':['1re','1 rey','1rey','1 r'], '2KI':['2re','2 rey','2rey','2 r'],
+    '1CH':['1cr','1 cro','1cro'], '2CH':['2cr','2 cro','2cro'], EZR:['esd','esdras'], NEH:['neh','nehemias','nehemías'], EST:['est','ester'], JOB:['job'], PSA:['sal','salmo','salmos'], PRO:['pro','prov','proverbios','pr'], ECC:['ecl','ec','eclesiastes','eclesiastés'], SNG:['cnt','cant','cantares'],
+    ISA:['isa','is','isaias','isaías'], JER:['jer','jeremias','jeremías'], LAM:['lam','lamentaciones','lm'], EZK:['eze','ez','ezequiel'], DAN:['dan','dn','daniel'], HOS:['hos','ose','oseas'], JOL:['joe','jl','joel'], AMO:['amo','am','amos'], OBA:['abd','abdias','abdías'], JON:['jon','jonas','jonás'], MIC:['miq','mi','miqueas'], NAM:['nah','nam','nahum'], HAB:['hab','habacuc'], ZEP:['sof','sofonias','sofonías'], HAG:['hag','ageo'], ZEC:['zac','zec','zacarias','zacarías'], MAL:['mal','malaquias','malaquías'],
+    MAT:['mat','mt','mateo'], MRK:['mar','mc','mr','marcos'], LUK:['luc','lc','lu','lucas'], JHN:['jua','jn','juan'], ACT:['hch','hech','hechos'], ROM:['rom','ro','roman','romanos'], '1CO':['1co','1 cor','1cor','1 corintios'], '2CO':['2co','2 cor','2cor','2 corintios'], GAL:['gal','gál','galatas','gálatas'], EPH:['efe','ef','efesios'], PHP:['fil','flp','filipenses'], COL:['col','colosenses'], '1TH':['1ts','1 tes','1tes','1 tesalonicenses'], '2TH':['2ts','2 tes','2tes','2 tesalonicenses'], '1TI':['1ti','1 tim','1tim','1 timoteo'], '2TI':['2ti','2 tim','2tim','2 timoteo'], TIT:['tit','tito'], PHM:['flm','film','filemon','filemón'], HEB:['heb','hebreos'], JAS:['stg','sant','santiago'], '1PE':['1pe','1 ped','1ped','1 p','1 pedro'], '2PE':['2pe','2 ped','2ped','2 p','2 pedro'], '1JN':['1jn','1 jn','1 juan'], '2JN':['2jn','2 jn','2 juan'], '3JN':['3jn','3 jn','3 juan'], JUD:['jud','judas'], REV:['ap','apo','apoc','apocalipsis']
+  };
+  function normalizeBibleName(value){ return String(value||'').toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[._]/g,' ').replace(/\s+/g,' ').trim(); }
+  function parseBibleReference(text){
+    const clean=normalizeBibleName(text).replace(/[;,)]$/,'');
+    const m=clean.match(/^(.+?)\s+(\d+)\s*:\s*(\d+)/);
+    if(!m)return null;
+    const alias=normalizeBibleName(m[1]);
+    const bookId=Object.keys(bibleNameAliases).find(id=>bibleNameAliases[id].some(a=>normalizeBibleName(a)===alias));
+    return bookId?{bookId,chapter:Number(m[2]),verse:Number(m[3])}:null;
+  }
+  async function goToBibleReference(ref){
+    currentBook=ref.bookId; currentChapter=ref.chapter;
+    els.book.value=currentBook; await refreshChapters(); els.chapter.value=String(currentChapter);
+    await loadPassage();
+    const row=document.querySelector(`[data-verse-n="${ref.verse}"]`);
+    if(row){ document.querySelectorAll('.verse--active').forEach(x=>x.classList.remove('verse--active')); row.classList.add('verse--active'); row.scrollIntoView({behavior:'smooth',block:'center'}); }
+  }
+  function wireDictionaryLinks(root){
+    root.querySelectorAll('a.strong').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();const m=((a.getAttribute('href')||'')+' '+a.textContent).match(/[GH]\d+/i);if(m)openDictionary(m[0].toUpperCase());}));
+    root.querySelectorAll('a.bible').forEach(a=>{
+      a.title='Abrir pasaje en Verbo';
+      a.addEventListener('click',async e=>{e.preventDefault();const ref=parseBibleReference(a.textContent);if(ref)await goToBibleReference(ref);else toast('No se pudo reconocer esta referencia');});
+    });
+  }
+  function dictionaryEntryTitle(code,entry){
+    const html=entry.html||entry.definition||entry.content||'';
+    const box=document.createElement('div'); box.innerHTML=html;
+    const first=box.querySelector('strong')?.textContent||box.textContent||code;
+    return first.replace(/super\s*\d+/gi,'').replace(/\b[GH]?\d{2,5}\b/g,'').replace(/\\u\w+/g,'').replace(/\s+/g,' ').trim()||code;
+  }
+  async function renderDictionaryLibrary(selected){
+    els.panelBody.innerHTML=emptyState('⌛','Cargando índice del diccionario…');
+    try{
+      const resources=await VerboModules.loadDictionaryEntries(selected.id);
+      const resource=resources[0];
+      if(!resource){els.panelBody.innerHTML=emptyState('⚠️','No se pudo cargar este diccionario.');return;}
+      const items=Object.entries(resource.entries).map(([code,entry])=>({code,entry,title:dictionaryEntryTitle(code,entry)})).sort((a,b)=>a.title.localeCompare(b.title,'es'));
+      els.panelBody.innerHTML=`<div class="dictionary-library"><input class="dictionary-library__search" id="dictionaryLibrarySearch" type="search" placeholder="Buscar palabra o tema…"><div class="dictionary-library__count">${items.length} estudios disponibles</div><div id="dictionaryLibraryList"></div></div>`;
+      const list=document.getElementById('dictionaryLibraryList');
+      const draw=(query='')=>{
+        const q=normalizeBibleName(query);
+        const filtered=!q?items:items.filter(x=>normalizeBibleName(x.title+' '+x.code+' '+(x.entry.html||'').replace(/<[^>]+>/g,' ')).includes(q));
+        list.innerHTML=filtered.map(x=>`<button type="button" class="dictionary-library__item" data-dict-code="${escapeHTML(x.code)}"><span>${escapeHTML(x.title)}</span><small>${escapeHTML(x.code)}</small></button>`).join('')||emptyState('🔎','No hay resultados.');
+        list.querySelectorAll('[data-dict-code]').forEach(btn=>btn.addEventListener('click',()=>openDictionary(btn.dataset.dictCode)));
+      };
+      draw(); document.getElementById('dictionaryLibrarySearch')?.addEventListener('input',e=>draw(e.target.value));
+    }catch(error){console.error(error);els.panelBody.innerHTML=emptyState('⚠️','No se pudo abrir el índice del diccionario.');}
+  }
+
   async function renderDictionaryPanel(focus=null){
     els.panelTitle.textContent='Diccionario';
     const installed=dictionaryCatalog();
@@ -477,7 +532,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }catch(error){ console.error(error); els.panelBody.innerHTML=emptyState('⚠️','No se pudo abrir este diccionario.'); }
       return;
     }
-    els.panelBody.innerHTML=emptyState('🔤','Pulsa un código Strong en una Biblia compatible para consultar este diccionario.');
+    await renderDictionaryLibrary(selected);
   }
 
   async function renderExegesis(focus=null){
@@ -533,7 +588,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const html=result.entry.html||result.entry.definition||result.entry.content||'';
       els.panelBody.innerHTML=`<article class="dict-entry"><div class="dict-entry__term">${result.code}</div><div class="dict-entry__source">${result.manifest.name}</div><button class="note-card__copy" id="copyDictEntry" type="button">Copiar diccionario</button><div class="dict-entry__def">${html}</div></article>`;
       document.getElementById('copyDictEntry')?.addEventListener('click',()=>copyToClipboard(`${result.code}\n${String(html).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()}`));
-      els.panelBody.querySelectorAll('a.strong').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();const m=(a.getAttribute('href')||'').match(/[GH]\d+/i);if(m)openDictionary(m[0].toUpperCase());}));
+      wireDictionaryLinks(els.panelBody);
     }catch(error){console.error(error);els.panelBody.innerHTML=emptyState('⚠️','No se pudo abrir esta entrada del diccionario.');}
   }
   function updateNavButtons(){ const idx=catalog.books.findIndex(b=>b.id===currentBook); els.prev.disabled=idx===0&&currentChapter===1; els.next.disabled=idx===catalog.books.length-1&&currentChapter===els.chapter.options.length; }
