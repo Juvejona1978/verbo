@@ -136,6 +136,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   function renderPanel(tab, focus=null) {
     els.panelToolbar.innerHTML='';
     if(tab==='comentario'){
+      // Si el usuario seleccionó un versículo con el panel cerrado, al abrir Comentario
+      // usamos ese versículo activo para ubicar el comentario correspondiente.
+      if(!focus){
+        const selectedVerseNumber = activeVerse();
+        const selectedVerse = data?.verses?.find(v => v.n === selectedVerseNumber);
+        focus = selectedVerse?.noteIds?.[0] || null;
+      }
       els.panelTitle.textContent='Comentario';
       const installed=commentaryCatalog();
       if(installed.length){
