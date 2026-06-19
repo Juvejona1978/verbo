@@ -995,12 +995,18 @@ body[data-theme="rosewood"] {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  margin: -20px 0 22px;
-  padding: 10px 12px;
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 2500;
+  padding: 10px 14px;
   border: 1px solid rgba(122,46,46,.16);
-  border-radius: 12px;
-  background: rgba(255,253,248,.78);
-  box-shadow: 0 10px 24px rgba(42,31,23,.06);
+  border-radius: 14px;
+  background: rgba(255,253,248,.88);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 24px rgba(42,31,23,.15);
+  max-width: calc(100vw - 24px);
 }
 .selection-toolbar[hidden] { display: none; }
 .selection-toolbar__count {
