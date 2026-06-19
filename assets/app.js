@@ -144,7 +144,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else text.textContent=v.text[currentVersion] || Object.values(v.text)[0] || '';
       const margin=document.createElement('span'); margin.className='marginalia';
       row.append(num,text,margin); els.list.appendChild(row);
-      text.addEventListener('click',()=>selectVerse(row,v));
+      text.addEventListener('click',(e)=>{
+        if(e.ctrlKey){ copyMode=true; }
+        selectVerse(row,v);
+      });
+      text.addEventListener('contextmenu',(e)=>{
+        e.preventDefault();
+        copyMode=true;
+        selectVerse(row,v);
+      });
       let pressTimer=null;
       text.addEventListener('touchstart',()=>{ pressTimer=setTimeout(()=>{ copyMode=true; selectVerse(row,v); },600); });
       text.addEventListener('touchend',()=>clearTimeout(pressTimer));
