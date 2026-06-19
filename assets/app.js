@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       compareVersion = compareVersion && availableCompare.some(v => v.id === compareVersion)
         ? compareVersion : preferredCompare;
       populateVersions();
-      selectedVerses.clear();
+      selectedVerses.clear(); copyMode=false;
       renderChapter();
       updateSelectionToolbar();
       localStorage.setItem('verbo:lastBook', currentBook);
@@ -145,16 +145,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       const margin=document.createElement('span'); margin.className='marginalia';
       row.append(num,text,margin); els.list.appendChild(row);
       text.addEventListener('click',()=>selectVerse(row,v));
+      let pressTimer=null;
+      text.addEventListener('touchstart',()=>{ pressTimer=setTimeout(()=>{ copyMode=true; selectVerse(row,v); },600); });
+      text.addEventListener('touchend',()=>clearTimeout(pressTimer));
+      text.addEventListener('touchmove',()=>clearTimeout(pressTimer));
       text.querySelectorAll('.strongs-tag').forEach(tag=>tag.addEventListener('click',e=>{e.stopPropagation(); openDictionary(tag.dataset.strongCode);}));
     });
   }
 
+  let copyMode = false;
+
   function selectVerse(row, verse) {
     document.querySelectorAll('.verse--active').forEach(x=>x.classList.remove('verse--active'));
     row.classList.add('verse--active');
-    if(selectedVerses.has(verse.n)) selectedVerses.delete(verse.n); else selectedVerses.add(verse.n);
-    row.classList.toggle('verse--selected', selectedVerses.has(verse.n));
-    updateSelectionToolbar();
+    if(copyMode){
+      if(selectedVerses.has(verse.n)) selectedVerses.delete(verse.n); else selectedVerses.add(verse.n);
+      row.classList.toggle('verse--selected', selectedVerses.has(verse.n));
+      updateSelectionToolbar();
+    }
     const firstNote=verse.noteIds?.[0]||null;
     // No abrir comentarios automáticamente al tocar un versículo.
     // En móvil el panel invade la lectura; el usuario lo abre manualmente desde el botón lateral.
@@ -431,6 +439,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   els.close.addEventListener('click',closePanel);
   els.copySelectionText?.addEventListener('click',copySelectedText);
   els.copySelectionRefs?.addEventListener('click',copySelectedReferences);
-  els.clearSelection?.addEventListener('click',()=>{ selectedVerses.clear(); document.querySelectorAll('.verse--selected').forEach(x=>x.classList.remove('verse--selected')); updateSelectionToolbar(); });
+  els.clearSelection?.addEventListener('click',()=>{ selectedVerses.clear(); copyMode=false; document.querySelectorAll('.verse--selected').forEach(x=>x.classList.remove('verse--selected')); updateSelectionToolbar(); });
   window.addEventListener('scroll',()=>{ clearTimeout(commentSyncTimer); commentSyncTimer=setTimeout(syncCommentToReading,120); }, {passive:true});
 });
