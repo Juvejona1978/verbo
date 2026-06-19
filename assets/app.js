@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let catalog, data, activeTab = null, currentVersion = null, compareVersion = null;
   let selectedVerses = new Set();
+  let copyMode = false;
   let suppressCommentSync = false;
   let commentSyncTimer = null;
   let searchState = null;
@@ -160,8 +161,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       text.querySelectorAll('.strongs-tag').forEach(tag=>tag.addEventListener('click',e=>{e.stopPropagation(); openDictionary(tag.dataset.strongCode);}));
     });
   }
-
-  let copyMode = false;
 
   function selectVerse(row, verse) {
     document.querySelectorAll('.verse--active').forEach(x=>x.classList.remove('verse--active'));
