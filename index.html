@@ -44,6 +44,12 @@
       <div class="reading-pane__inner">
         <div class="chapter-eyebrow"></div>
         <h1 class="chapter-title"></h1>
+        <div class="selection-toolbar" id="selectionToolbar" hidden>
+          <span class="selection-toolbar__count" id="selectionCount"></span>
+          <button class="selection-toolbar__btn" id="copySelectionText" type="button">Copiar texto</button>
+          <button class="selection-toolbar__btn" id="copySelectionRefs" type="button">Copiar refs</button>
+          <button class="selection-toolbar__btn selection-toolbar__btn--ghost" id="clearSelection" type="button">Limpiar</button>
+        </div>
         <div id="verseList"></div>
       </div>
     </main>

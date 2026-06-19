@@ -15,10 +15,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     panelBody: document.getElementById('panelBody'),
     close: document.getElementById('panelClose'),
     search: document.getElementById('searchTrigger'),
-    tabs: [...document.querySelectorAll('.tab-rail__btn')]
+    tabs: [...document.querySelectorAll('.tab-rail__btn')],
+    selectionToolbar: document.getElementById('selectionToolbar'),
+    selectionCount: document.getElementById('selectionCount'),
+    copySelectionText: document.getElementById('copySelectionText'),
+    copySelectionRefs: document.getElementById('copySelectionRefs'),
+    clearSelection: document.getElementById('clearSelection')
   };
 
   let catalog, data, activeTab = null, currentVersion = null, compareVersion = null;
+  let selectedVerses = new Set();
+  let suppressCommentSync = false;
+  let commentSyncTimer = null;
+  let searchState = null;
   let currentCommentary = localStorage.getItem('verbo:lastCommentary') || null;
   let currentBook = localStorage.getItem('verbo:lastBook') || 'ROM';
   let currentChapter = Number(localStorage.getItem('verbo:lastChapter')) || 7;
@@ -38,6 +47,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   const escapeHTML = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[ch]));
   const bibleCatalog = () => catalog.bibles.map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path }));
   const commentaryCatalog = () => (catalog.commentaries || []).map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path }));
+  const bookAbbr = { GEN:'Gn', EXO:'Ex', LEV:'Lv', NUM:'Nm', DEU:'Dt', JOS:'Jos', JDG:'Jue', RUT:'Rt', '1SA':'1 S', '2SA':'2 S', '1KI':'1 R', '2KI':'2 R', '1CH':'1 Cr', '2CH':'2 Cr', EZR:'Esd', NEH:'Neh', EST:'Est', JOB:'Job', PSA:'Sal', PRO:'Pr', ECC:'Ec', SNG:'Cnt', ISA:'Is', JER:'Jer', LAM:'Lm', EZK:'Ez', DAN:'Dn', HOS:'Os', JOL:'Jl', AMO:'Am', OBA:'Abd', JON:'Jon', MIC:'Mi', NAM:'Nah', HAB:'Hab', ZEP:'Sof', HAG:'Hag', ZEC:'Zac', MAL:'Mal', MAT:'Mt', MRK:'Mc', LUK:'Lc', JHN:'Jn', ACT:'Hch', ROM:'Ro', '1CO':'1 Cor', '2CO':'2 Cor', GAL:'Gá', EPH:'Ef', PHP:'Fil', COL:'Col', '1TH':'1 Tes', '2TH':'2 Tes', '1TI':'1 Ti', '2TI':'2 Ti', TIT:'Tit', PHM:'Flm', HEB:'Heb', JAS:'Stg', '1PE':'1 P', '2PE':'2 P', '1JN':'1 Jn', '2JN':'2 Jn', '3JN':'3 Jn', JUD:'Jud', REV:'Ap' };
+  const compactRef = (bookId=currentBook, chapter=currentChapter, verses=[]) => {
+    const sorted=[...new Set(verses.map(Number))].sort((a,b)=>a-b);
+    if(!sorted.length) return `${bookAbbr[bookId] || data?.meta?.book || bookId} ${chapter}`;
+    const ranges=[]; let start=sorted[0], prev=sorted[0];
+    for(const n of sorted.slice(1)){ if(n===prev+1){ prev=n; continue; } ranges.push(start===prev?`${start}`:`${start}-${prev}`); start=prev=n; }
+    ranges.push(start===prev?`${start}`:`${start}-${prev}`);
+    return `${bookAbbr[bookId] || data?.meta?.book || bookId} ${chapter}:${ranges.join(',')}`;
+  };
+  const copyToClipboard = async (text) => {
+    try { await navigator.clipboard.writeText(text); toast('Copiado'); }
+    catch { const area=document.createElement('textarea'); area.value=text; document.body.appendChild(area); area.select(); document.execCommand('copy'); area.remove(); toast('Copiado'); }
+  };
+  const toast = (message) => {
+    let el=document.querySelector('.verbo-toast');
+    if(!el){ el=document.createElement('div'); el.className='verbo-toast'; document.body.appendChild(el); }
+    el.textContent=message; el.classList.add('verbo-toast--show');
+    clearTimeout(el._timer); el._timer=setTimeout(()=>el.classList.remove('verbo-toast--show'),1400);
+  };
 
   applyTheme(localStorage.getItem('verbo:theme') || 'paper');
 
@@ -78,7 +106,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       compareVersion = compareVersion && availableCompare.some(v => v.id === compareVersion)
         ? compareVersion : preferredCompare;
       populateVersions();
+      selectedVerses.clear();
       renderChapter();
+      updateSelectionToolbar();
       localStorage.setItem('verbo:lastBook', currentBook);
       localStorage.setItem('verbo:lastChapter', String(currentChapter));
       if (activeTab) renderPanel(activeTab);
@@ -101,6 +131,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     data.verses.forEach(v => {
       const row = document.createElement('div'); row.className='verse'; row.dataset.verseN=v.n;
       if (v.n === restoreVerse) row.classList.add('verse--active');
+      if (selectedVerses.has(v.n)) row.classList.add('verse--selected');
       const num=document.createElement('span'); num.className='verse__num'; num.textContent=v.n;
       const text=document.createElement('span'); text.className='verse__text'+(v.hasNote?' verse__text--has-note':''); text.tabIndex=0;
       const verseSegments=v.segments?.[currentVersion];
@@ -121,11 +152,40 @@ document.addEventListener('DOMContentLoaded', async () => {
   function selectVerse(row, verse) {
     document.querySelectorAll('.verse--active').forEach(x=>x.classList.remove('verse--active'));
     row.classList.add('verse--active');
+    if(selectedVerses.has(verse.n)) selectedVerses.delete(verse.n); else selectedVerses.add(verse.n);
+    row.classList.toggle('verse--selected', selectedVerses.has(verse.n));
+    updateSelectionToolbar();
     const firstNote=verse.noteIds?.[0]||null;
     // No abrir comentarios automáticamente al tocar un versículo.
     // En móvil el panel invade la lectura; el usuario lo abre manualmente desde el botón lateral.
     if (activeTab === 'comentario') renderPanel('comentario', firstNote);
     if (activeTab === 'comparar') renderCompare(verse.n);
+  }
+
+  function updateSelectionToolbar(){
+    const count=selectedVerses.size;
+    if(!els.selectionToolbar) return;
+    els.selectionToolbar.hidden = count === 0;
+    if(els.selectionCount) els.selectionCount.textContent = count === 1 ? '1 versículo seleccionado' : `${count} versículos seleccionados`;
+  }
+
+  function selectedVerseNumbers(){ return [...selectedVerses].sort((a,b)=>a-b); }
+
+  function copySelectedReferences(){
+    const nums=selectedVerseNumbers();
+    if(!nums.length) return;
+    copyToClipboard(compactRef(currentBook,currentChapter,nums));
+  }
+
+  function copySelectedText(){
+    const nums=selectedVerseNumbers();
+    if(!nums.length) return;
+    const lines=nums.map(n=>{
+      const verse=data.verses.find(v=>v.n===n);
+      const text=verse?.text?.[currentVersion] || Object.values(verse?.text || {})[0] || '';
+      return `${compactRef(currentBook,currentChapter,[n])} ${String(text).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()}`;
+    });
+    copyToClipboard(lines.join('\n'));
   }
 
   function openPanel(tab, focus=null) {
@@ -149,7 +209,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       const installed=commentaryCatalog();
       if(installed.length){
         const options=installed.map(c=>`<option value="${c.id}" ${c.id===currentCommentary?'selected':''}>${escapeHTML(c.label)}</option>`).join('');
-        els.panelToolbar.innerHTML=`<div class="compare-toolbar"><span class="compare-toolbar__label">Comentario</span><select class="compare-toolbar__select" id="commentarySelect">${options}</select></div>`;
+        els.panelToolbar.innerHTML=`<div class="compare-toolbar"><span class="compare-toolbar__label">Comentario</span><select class="compare-toolbar__select" id="commentarySelect">${options}</select><button class="mini-copy-button" id="copyVisibleComment" type="button">Copiar</button></div>`;
+        document.getElementById('copyVisibleComment')?.addEventListener('click',()=>{
+          const activeId = data?.verses?.find(v=>v.n===activeVerse())?.noteIds?.[0];
+          const note = activeId ? data.notes[activeId] : Object.values(data.notes)[0];
+          if(note) copyToClipboard(`${note.title}\n${String(note.body).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()}`);
+        });
         document.getElementById('commentarySelect')?.addEventListener('change', async e=>{
           currentCommentary=e.target.value;
           localStorage.setItem('verbo:lastCommentary', currentCommentary);
@@ -158,14 +223,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
       }
       const entries=Object.entries(data.notes);
-      els.panelBody.innerHTML=entries.length?entries.map(([id,n])=>`<div class="note-card" data-note-id="${id}"><div class="note-card__ref">${data.meta.book} ${data.meta.chapter}</div><div class="note-card__title">${n.title}</div><div class="note-card__author">${n.author}</div><div class="note-card__body">${n.body}</div></div>`).join(''):emptyState('📖','Este capítulo todavía no tiene comentarios cargados.');
-      if(focus) els.panelBody.querySelector(`[data-note-id="${focus}"]`)?.scrollIntoView({block:'start'});
+      els.panelBody.innerHTML=entries.length?entries.map(([id,n])=>`<div class="note-card" data-note-id="${id}"><div class="note-card__ref">${data.meta.book} ${data.meta.chapter}</div><div class="note-card__title">${n.title}</div><div class="note-card__author">${n.author}</div><button class="note-card__copy" type="button" data-copy-note="${id}">Copiar comentario</button><div class="note-card__body">${n.body}</div></div>`).join(''):emptyState('📖','Este capítulo todavía no tiene comentarios cargados.');
+      els.panelBody.querySelectorAll('[data-copy-note]').forEach(btn=>btn.addEventListener('click',()=>{ const note=data.notes[btn.dataset.copyNote]; if(note) copyToClipboard(`${note.title}\n${String(note.body).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()}`); }));
+      if(focus) scrollCommentToNote(focus);
     }
     if(tab==='comparar'){ els.panelTitle.textContent='Comparar versiones'; renderCompare(focus||activeVerse()); }
     if(tab==='diccionario'){ els.panelTitle.textContent='Diccionario'; els.panelBody.innerHTML=emptyState('🔤','Pulsa un código Strong en una Biblia compatible para consultar su definición.'); }
     if(tab==='notas') renderNotes();
     if(tab==='tema') renderTheme();
     if(tab==='buscar') renderSearch();
+  }
+
+  function scrollCommentToNote(noteId){
+    const card = noteId ? els.panelBody.querySelector(`[data-note-id="${noteId}"]`) : null;
+    if(!card) return;
+    suppressCommentSync = true;
+    card.scrollIntoView({block:'start'});
+    setTimeout(()=>{ suppressCommentSync=false; }, 250);
+  }
+
+  function syncCommentToReading(){
+    if(activeTab !== 'comentario' || suppressCommentSync || !data?.verses?.length) return;
+    const rows=[...document.querySelectorAll('.verse')];
+    const targetLine = window.innerHeight * 0.38;
+    let best=null, bestDist=Infinity;
+    rows.forEach(row=>{ const rect=row.getBoundingClientRect(); const dist=Math.abs(rect.top-targetLine); if(rect.bottom>90 && rect.top<window.innerHeight && dist<bestDist){ best=row; bestDist=dist; }});
+    const n=Number(best?.dataset.verseN);
+    if(!n) return;
+    const verse=data.verses.find(v=>v.n===n);
+    const noteId=verse?.noteIds?.[0];
+    if(noteId) scrollCommentToNote(noteId);
   }
 
   async function renderCompare(focus) {
@@ -187,29 +274,85 @@ document.addEventListener('DOMContentLoaded', async () => {
     if(focus) els.panelBody.querySelector(`[data-verse-n="${focus}"]`)?.scrollIntoView({block:'center'});
   }
 
+  async function openSearchResult(r, versionId){
+    currentBook=r.bookId; currentChapter=r.chapter; currentVersion=versionId;
+    els.book.value=currentBook; await refreshChapters(); els.chapter.value=String(currentChapter); await loadPassage();
+    openPanel('buscar');
+    const row=document.querySelector(`[data-verse-n="${r.verse}"]`);
+    if(row){ document.querySelectorAll('.verse--active').forEach(x=>x.classList.remove('verse--active')); row.classList.add('verse--active'); row.scrollIntoView({behavior:'smooth',block:'center'}); }
+  }
+
+  function renderSavedSearchResults(){
+    if(!searchState?.results?.length) return;
+    const {results, versionId, scopeLabel}=searchState;
+    const pageSize=100;
+    let page=searchState.page || 0;
+    const totalPages=Math.ceil(results.length/pageSize);
+    const start=page*pageSize;
+    const end=Math.min(start+pageSize,results.length);
+    const visible=results.slice(start,end);
+    els.panelBody.innerHTML=`
+      <div class="search-summary">
+        <strong>${results.length} resultados</strong>
+        <span>${escapeHTML(scopeLabel)} · mostrando ${start+1}–${end}</span>
+      </div>
+      <div class="search-results-list">
+        ${visible.map((r,i)=>`<button class="search-result" type="button" data-result="${start+i}"><span class="search-result__ref">${escapeHTML(r.book)} ${r.chapter}:${r.verse}</span><span class="search-result__text">${escapeHTML(r.text)}</span></button>`).join('')}
+      </div>
+      <nav class="search-pagination" aria-label="Páginas de resultados">
+        <button class="search-page-button" id="searchPrevPage" type="button" ${page===0?'disabled':''}>‹ Anterior</button>
+        <span class="search-page-status">Página ${page+1} de ${totalPages}</span>
+        <button class="search-page-button" id="searchNextPage" type="button" ${page>=totalPages-1?'disabled':''}>Siguiente ›</button>
+      </nav>`;
+    els.panelBody.querySelectorAll('.search-result').forEach(btn=>btn.addEventListener('click',()=>openSearchResult(results[Number(btn.dataset.result)], versionId)));
+    document.getElementById('searchPrevPage')?.addEventListener('click',()=>{ if(page>0){ searchState.page=page-1; renderSavedSearchResults(); els.panelBody.scrollTop=0;} });
+    document.getElementById('searchNextPage')?.addEventListener('click',()=>{ if(page<totalPages-1){ searchState.page=page+1; renderSavedSearchResults(); els.panelBody.scrollTop=0;} });
+  }
+
   function renderSearch(){
     els.panelTitle.textContent='Buscar en la Biblia';
-    const options=bibleCatalog().map(v=>`<option value="${v.id}" ${v.id===currentVersion?'selected':''}>${escapeHTML(v.label)}</option>`).join('');
+    const saved = searchState || { query:'', versionId:currentVersion, testament:'nt', results:[], page:0, scopeLabel:'NT' };
+    const options=bibleCatalog().map(v=>`<option value="${v.id}" ${v.id===saved.versionId?'selected':''}>${escapeHTML(v.label)}</option>`).join('');
     els.panelToolbar.innerHTML=`<form class="search-panel-form" id="searchForm">
-      <input id="searchInput" class="search-panel-input" type="search" minlength="2" placeholder="Palabra o frase…" autocomplete="off">
+      <input id="searchInput" class="search-panel-input" type="search" minlength="2" placeholder="Palabra o frase…" autocomplete="off" value="${escapeHTML(saved.query)}">
       <select id="searchVersion" class="search-panel-select" aria-label="Versión bíblica">${options}</select>
       <select id="searchScope" class="search-panel-scope" aria-label="Ámbito de búsqueda">
-        <option value="nt">NT</option>
-        <option value="ot">AT</option>
-        <option value="all">Biblia</option>
+        <option value="nt" ${saved.testament==='nt'?'selected':''}>NT</option>
+        <option value="ot" ${saved.testament==='ot'?'selected':''}>AT</option>
+        <option value="all" ${saved.testament==='all'?'selected':''}>Biblia</option>
       </select>
       <button class="search-panel-button" type="submit">Buscar</button>
     </form>`;
     els.panelBody.innerHTML=emptyState('⌕','Escribe al menos dos caracteres. Los resultados aparecerán en orden bíblico, 100 por página.');
-    const form=document.getElementById('searchForm'), input=document.getElementById('searchInput');
+
+    const form=document.getElementById('searchForm');
+    const input=document.getElementById('searchInput');
+    const versionSelect=document.getElementById('searchVersion');
+    const scopeSelect=document.getElementById('searchScope');
+
+    const clearWhenChanged=()=>{
+      const q=input.value.trim();
+      const v=versionSelect.value;
+      const t=scopeSelect.value;
+      if(searchState && (q!==searchState.query || v!==searchState.versionId || t!==searchState.testament)){
+        searchState=null;
+        els.panelBody.innerHTML=q.length?emptyState('⌕','Pulsa Buscar para ver nuevos resultados.'):emptyState('⌕','Escribe al menos dos caracteres.');
+      }
+    };
+
+    input?.addEventListener('input', clearWhenChanged);
+    versionSelect?.addEventListener('change', clearWhenChanged);
+    scopeSelect?.addEventListener('change', clearWhenChanged);
+
+    if(searchState?.results?.length) renderSavedSearchResults();
     setTimeout(()=>input?.focus(),0);
 
     form?.addEventListener('submit',async e=>{
       e.preventDefault();
       const query=input.value.trim();
-      const versionId=document.getElementById('searchVersion').value;
-      const testament=document.getElementById('searchScope').value;
-      if(query.length<2){ els.panelBody.innerHTML=emptyState('⌕','Escribe al menos dos caracteres.'); return; }
+      const versionId=versionSelect.value;
+      const testament=scopeSelect.value;
+      if(query.length<2){ searchState=null; els.panelBody.innerHTML=emptyState('⌕','Escribe al menos dos caracteres.'); return; }
       const selected=bibleCatalog().find(v=>v.id===versionId);
       els.panelBody.innerHTML=emptyState('⌛','Buscando…');
       try{
@@ -217,42 +360,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           testament,
           onProgress:p=>{els.panelBody.innerHTML=emptyState('⌛',`Buscando en ${escapeHTML(p.book)} · ${p.current}/${p.total}`);}
         });
-        if(!results.length){ els.panelBody.innerHTML=emptyState('🔎',`No se encontraron resultados para “${escapeHTML(query)}”.`); return; }
-
-        const pageSize=100;
-        let page=0;
-        const totalPages=Math.ceil(results.length/pageSize);
         const scopeLabel={nt:'NT',ot:'AT',all:'Biblia'}[testament];
-
-        const openResult=async r=>{
-          currentBook=r.bookId; currentChapter=r.chapter; currentVersion=versionId;
-          els.book.value=currentBook; await refreshChapters(); els.chapter.value=String(currentChapter); await loadPassage();
-          const row=document.querySelector(`[data-verse-n="${r.verse}"]`);
-          if(row){ row.classList.add('verse--active'); row.scrollIntoView({behavior:'smooth',block:'center'}); }
-        };
-
-        const renderResultsPage=()=>{
-          const start=page*pageSize;
-          const end=Math.min(start+pageSize,results.length);
-          const visible=results.slice(start,end);
-          els.panelBody.innerHTML=`
-            <div class="search-summary">
-              <strong>${results.length} resultados</strong>
-              <span>${escapeHTML(scopeLabel)} · mostrando ${start+1}–${end}</span>
-            </div>
-            <div class="search-results-list">
-              ${visible.map((r,i)=>`<button class="search-result" type="button" data-result="${start+i}"><span class="search-result__ref">${escapeHTML(r.book)} ${r.chapter}:${r.verse}</span><span class="search-result__text">${escapeHTML(r.text)}</span></button>`).join('')}
-            </div>
-            <nav class="search-pagination" aria-label="Páginas de resultados">
-              <button class="search-page-button" id="searchPrevPage" type="button" ${page===0?'disabled':''}>‹ Anterior</button>
-              <span class="search-page-status">Página ${page+1} de ${totalPages}</span>
-              <button class="search-page-button" id="searchNextPage" type="button" ${page>=totalPages-1?'disabled':''}>Siguiente ›</button>
-            </nav>`;
-          els.panelBody.querySelectorAll('.search-result').forEach(btn=>btn.addEventListener('click',()=>openResult(results[Number(btn.dataset.result)])));
-          document.getElementById('searchPrevPage')?.addEventListener('click',()=>{ if(page>0){page--;renderResultsPage();els.panelBody.scrollTop=0;} });
-          document.getElementById('searchNextPage')?.addEventListener('click',()=>{ if(page<totalPages-1){page++;renderResultsPage();els.panelBody.scrollTop=0;} });
-        };
-        renderResultsPage();
+        searchState={query, versionId, testament, results, page:0, scopeLabel};
+        if(!results.length){ els.panelBody.innerHTML=emptyState('🔎',`No se encontraron resultados para “${escapeHTML(query)}”.`); return; }
+        renderSavedSearchResults();
       }catch(error){ console.error(error); els.panelBody.innerHTML=emptyState('⚠️','No se pudo completar la búsqueda.'); }
     });
   }
@@ -299,7 +410,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const result=await VerboModules.getDictionaryEntry(code);
       if(!result){ els.panelBody.innerHTML=emptyState('🔎',`No se encontró una entrada para ${code}.`); return; }
       const html=result.entry.html||result.entry.definition||'';
-      els.panelBody.innerHTML=`<article class="dict-entry"><div class="dict-entry__term">${result.code}</div><div class="dict-entry__source">${result.manifest.name}</div><div class="dict-entry__def">${html}</div></article>`;
+      els.panelBody.innerHTML=`<article class="dict-entry"><div class="dict-entry__term">${result.code}</div><div class="dict-entry__source">${result.manifest.name}</div><button class="note-card__copy" id="copyDictEntry" type="button">Copiar diccionario</button><div class="dict-entry__def">${html}</div></article>`;
+      document.getElementById('copyDictEntry')?.addEventListener('click',()=>copyToClipboard(`${result.code}\n${String(html).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()}`));
       els.panelBody.querySelectorAll('a.strong').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();const m=(a.getAttribute('href')||'').match(/[GH]\d+/i);if(m)openDictionary(m[0].toUpperCase());}));
     }catch(error){console.error(error);els.panelBody.innerHTML=emptyState('⚠️','No se pudo abrir esta entrada del diccionario.');}
   }
@@ -322,4 +434,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   els.tabs.forEach(b=>b.addEventListener('click',()=>activeTab===b.dataset.tab?closePanel():openPanel(b.dataset.tab)));
   els.search.addEventListener('click',()=>openPanel('buscar'));
   els.close.addEventListener('click',closePanel);
+  els.copySelectionText?.addEventListener('click',copySelectedText);
+  els.copySelectionRefs?.addEventListener('click',copySelectedReferences);
+  els.clearSelection?.addEventListener('click',()=>{ selectedVerses.clear(); document.querySelectorAll('.verse--selected').forEach(x=>x.classList.remove('verse--selected')); updateSelectionToolbar(); });
+  window.addEventListener('scroll',()=>{ clearTimeout(commentSyncTimer); commentSyncTimer=setTimeout(syncCommentToReading,120); }, {passive:true});
 });
