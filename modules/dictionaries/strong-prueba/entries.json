@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "type": "dictionary-entries",
+  "moduleId": "strong-prueba",
+  "entries": {
+    "G4559": {
+      "code": "G4559",
+      "term": "σαρκικός (sarkikós)",
+      "pronunciation": "sar-ki-kós",
+      "definition": "Adjetivo: perteneciente o relativo a la carne; carnal, en el sentido de dominado por la naturaleza humana caída, no meramente 'físico'.",
+      "occurrences": "Usado 11 veces en el NT, principalmente por Pablo (Romanos, 1 Corintios)."
+    }
+  }
+}

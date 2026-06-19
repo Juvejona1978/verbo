@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "type": "bible-book",
+  "moduleId": "rv1865",
+  "book": {
+    "id": "ROM",
+    "name": "Romanos"
+  },
+  "chapters": {
+    "7": {
+      "1": {
+        "text": "¿No sabéis, hermanos, (porque hablo con los que saben la ley) que la ley solamente tiene dominio sobre el hombre entre tanto que vive?",
+        "strongs": []
+      },
+      "2": {
+        "text": "Porque la mujer que está sujeta a marido, mientras el marido vive, está obligada a la ley; mas muerto el marido, libre está de la ley del marido.",
+        "strongs": []
+      },
+      "7": {
+        "text": "¿Qué pues diremos? ¿Es la ley pecado? En ninguna manera. Mas yo no conocí el pecado sino por la ley, porque tampoco conociera la codicia, si la ley no dijera: No codiciarás.",
+        "strongs": []
+      },
+      "14": {
+        "text": "Porque sabemos que la ley es espiritual; mas yo soy carnal, vendido al pecado.",
+        "strongs": [
+          {
+            "word": "carnal",
+            "g": "G4559",
+            "gloss": "sarkikós — perteneciente a la carne, dominado por ella"
+          }
+        ]
+      },
+      "15": {
+        "text": "Porque lo que hago, no lo entiendo; porque no hago lo que quiero, sino lo que aborrezco, eso hago.",
+        "strongs": []
+      },
+      "18": {
+        "text": "Y yo sé que en mí, esto es, en mi carne, no mora el bien; porque el querer está en mí, mas el hacer el bien no lo alcanzo.",
+        "strongs": []
+      },
+      "19": {
+        "text": "Porque no hago el bien que quiero; sino que el mal que no quiero, esto hago.",
+        "strongs": []
+      },
+      "24": {
+        "text": "¡Miserable hombre de mí! ¿quién me librará del cuerpo de esta muerte?",
+        "strongs": []
+      },
+      "25": {
+        "text": "Gracias doy a Dios por Jesucristo Señor nuestro. Así que yo mismo con la mente sirvo a la ley de Dios; mas con la carne a la ley del pecado.",
+        "strongs": []
+      }
+    }
+  }
+}

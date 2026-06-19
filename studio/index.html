@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Verbo Module Studio</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>Verbo <span>Module Studio</span></h1>
+      <p>Conversor local de módulos MySword a JSON para Verbo</p>
+    </div>
+    <div class="privacy">🔒 El archivo no sale de tu navegador</div>
+  </header>
+
+  <main class="layout">
+    <section class="card upload-card">
+      <div id="dropZone" class="drop-zone" tabindex="0">
+        <div class="drop-icon">📦</div>
+        <h2>Arrastra aquí un módulo MySword</h2>
+        <p>.bbl.mybible · .cmt.mybible · .dct.mybible</p>
+        <button id="chooseBtn" type="button">Elegir archivo</button>
+        <input id="fileInput" type="file" hidden accept=".mybible,.bbl,.cmt,.dct">
+      </div>
+      <div id="fileInfo" class="file-info hidden"></div>
+    </section>
+
+
+    <section class="card registry-card">
+      <div class="section-title">
+        <div>
+          <h2>Registro de Verbo <span class="optional">(opcional)</span></h2>
+          <p class="section-help">Carga el <code>modules/registry.json</code> actual para recibirlo actualizado junto con el módulo.</p>
+        </div>
+        <button id="registryBtn" class="secondary" type="button">Elegir registry.json</button>
+        <input id="registryInput" type="file" hidden accept=".json,application/json">
+      </div>
+      <div id="registryInfo" class="registry-info">No se ha cargado ningún registro. El módulo se convertirá normalmente.</div>
+    </section>
+
+    <section id="workspace" class="workspace hidden">
+      <section class="card">
+        <div class="section-title">
+          <h2>Información detectada</h2>
+          <span id="typeBadge" class="badge">—</span>
+        </div>
+        <div class="form-grid">
+          <label>Nombre completo<input id="nameInput" type="text"></label>
+          <label>Abreviatura<input id="abbrInput" type="text"></label>
+          <label>Identificador del módulo<input id="idInput" type="text"></label>
+          <label>Idioma<input id="langInput" type="text" value="es"></label>
+          <label class="wide">Autor<input id="authorInput" type="text"></label>
+          <label class="wide">Descripción<textarea id="descInput" rows="3"></textarea></label>
+        </div>
+        <div id="stats" class="stats"></div>
+      </section>
+
+      <section class="card">
+        <div class="section-title">
+          <h2>Vista previa</h2>
+          <button id="inspectBtn" class="secondary" type="button">Actualizar vista previa</button>
+        </div>
+        <div id="preview" class="preview"></div>
+      </section>
+
+      <section class="card actions-card">
+        <div class="option-row">
+          <label><input id="prettyJson" type="checkbox"> JSON con formato legible</label>
+          <label><input id="includeReport" type="checkbox" checked> Incluir reporte de conversión</label>
+          <label><input id="includeRegistry" type="checkbox" checked> Incluir registry.json actualizado</label>
+        </div>
+        <button id="convertBtn" class="primary" type="button">Convertir y descargar ZIP</button>
+        <div id="progressWrap" class="progress-wrap hidden">
+          <div class="progress-line"><div id="progressBar"></div></div>
+          <div id="progressText">Preparando…</div>
+        </div>
+        <div id="message" class="message hidden"></div>
+      </section>
+    </section>
+  </main>
+
+  <footer>
+    <strong>Verbo Module Studio</strong> · Conversión local · Formato Verbo schemaVersion 2
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

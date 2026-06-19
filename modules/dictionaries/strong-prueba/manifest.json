@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "type": "dictionary",
+  "id": "strong-prueba",
+  "name": "Strong de prueba",
+  "abbreviation": "STR",
+  "language": "es",
+  "license": "contenido-de-prueba",
+  "entriesFile": "entries.json"
+}
