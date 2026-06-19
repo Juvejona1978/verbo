@@ -638,11 +638,14 @@ button:focus-visible,
   .app-header__sub { display: none; }
 
   .side-panel--open {
-    position: absolute;
-    right: var(--rail-width);
+    position: fixed;
     top: 0;
     bottom: 0;
+    right: var(--rail-width);
+    width: calc(100vw - var(--rail-width));
+    max-width: calc(100vw - var(--rail-width));
     box-shadow: -8px 0 24px rgba(0,0,0,0.08);
+    z-index: 1000;
   }
 
   .reading-pane__inner { padding: 0 20px; }
