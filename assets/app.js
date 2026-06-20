@@ -50,8 +50,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const escapeHTML = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[ch]));
   const bibleCatalog = () => catalog.bibles.map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path }));
   const commentaryCatalog = () => (catalog.commentaries || []).map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest }));
-  const dictionaryCatalog = () => (catalog.dictionaries || []).filter(item => item.manifest.strong || item.manifest.id === 'multilexico' || item.manifest.id.includes('strong')).map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest, linked:Boolean(item.manifest.books?.length) }));
-  const libraryCatalog = () => [ ...(catalog.library || []), ...(catalog.dictionaries || []).filter(item => !(item.manifest.strong || item.manifest.id === 'multilexico' || item.manifest.id.includes('strong'))) ].map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest, linked:Boolean(item.manifest.books?.length), type:item.manifest.type || 'resource' }));
+  const dictionaryCatalog = () => (catalog.dictionaries || []).filter(item => item.manifest.id === 'multilexico').map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest, linked:Boolean(item.manifest.books?.length) }));
+  const libraryCatalog = () => [ ...(catalog.library || []), ...(catalog.dictionaries || []).filter(item => item.manifest.id !== 'multilexico') ].map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest, linked:Boolean(item.manifest.books?.length), type:item.manifest.type || 'resource' }));
   const exegesisCatalog = () => (catalog.exegesis || []).map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest }));
   const bookAbbr = { GEN:'Gn', EXO:'Ex', LEV:'Lv', NUM:'Nm', DEU:'Dt', JOS:'Jos', JDG:'Jue', RUT:'Rt', '1SA':'1 S', '2SA':'2 S', '1KI':'1 R', '2KI':'2 R', '1CH':'1 Cr', '2CH':'2 Cr', EZR:'Esd', NEH:'Neh', EST:'Est', JOB:'Job', PSA:'Sal', PRO:'Pr', ECC:'Ec', SNG:'Cnt', ISA:'Is', JER:'Jer', LAM:'Lm', EZK:'Ez', DAN:'Dn', HOS:'Os', JOL:'Jl', AMO:'Am', OBA:'Abd', JON:'Jon', MIC:'Mi', NAM:'Nah', HAB:'Hab', ZEP:'Sof', HAG:'Hag', ZEC:'Zac', MAL:'Mal', MAT:'Mt', MRK:'Mc', LUK:'Lc', JHN:'Jn', ACT:'Hch', ROM:'Ro', '1CO':'1 Cor', '2CO':'2 Cor', GAL:'Gá', EPH:'Ef', PHP:'Fil', COL:'Col', '1TH':'1 Tes', '2TH':'2 Tes', '1TI':'1 Ti', '2TI':'2 Ti', TIT:'Tit', PHM:'Flm', HEB:'Heb', JAS:'Stg', '1PE':'1 P', '2PE':'2 P', '1JN':'1 Jn', '2JN':'2 Jn', '3JN':'3 Jn', JUD:'Jud', REV:'Ap' };
   const compactRef = (bookId=currentBook, chapter=currentChapter, verses=[]) => {
@@ -507,10 +507,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         const q=normalizeBibleName(query);
         const filtered=!q?items:items.filter(x=>normalizeBibleName(x.title+' '+x.code+' '+(x.entry.html||'').replace(/<[^>]+>/g,' ')).includes(q));
         list.innerHTML=filtered.map(x=>`<button type="button" class="dictionary-library__item" data-dict-code="${escapeHTML(x.code)}"><span>${escapeHTML(x.title)}</span><small>${escapeHTML(x.code)}</small></button>`).join('')||emptyState('🔎','No hay resultados.');
-        list.querySelectorAll('[data-dict-code]').forEach(btn=>btn.addEventListener('click',()=>openDictionary(btn.dataset.dictCode)));
+        list.querySelectorAll('[data-dict-code]').forEach(btn=>btn.addEventListener('click',()=>openLibraryDictionaryEntry(selected, btn.dataset.dictCode)));
       };
       draw(); document.getElementById('dictionaryLibrarySearch')?.addEventListener('input',e=>draw(e.target.value));
     }catch(error){console.error(error);els.panelBody.innerHTML=emptyState('⚠️','No se pudo abrir el índice del diccionario.');}
+  }
+
+
+  async function openLibraryDictionaryEntry(selected, code){
+    els.panelTitle.textContent=`Biblioteca · ${selected.label}`;
+    els.panelToolbar.innerHTML=`<button class="note-card__copy" id="backToLibraryIndex" type="button">← Índice</button>`;
+    document.getElementById('backToLibraryIndex')?.addEventListener('click',()=>renderLibraryPanel(activeVerse()));
+    els.panelBody.innerHTML=emptyState('⌛','Abriendo entrada de biblioteca…');
+    try{
+      const result=await VerboModules.getDictionaryEntry(code, selected.id);
+      if(!result){ els.panelBody.innerHTML=emptyState('🔎',`No se encontró esta entrada en ${selected.label}.`); return; }
+      const html=result.entry.html||result.entry.definition||result.entry.content||'';
+      const title=dictionaryEntryTitle(result.code,result.entry);
+      els.panelBody.innerHTML=`<article class="dict-entry"><div class="dict-entry__term">${escapeHTML(title)}</div><div class="dict-entry__source">${escapeHTML(result.manifest.name)}</div><button class="note-card__copy" id="copyLibraryEntry" type="button">Copiar entrada</button><div class="dict-entry__def">${html}</div></article>`;
+      document.getElementById('copyLibraryEntry')?.addEventListener('click',()=>copyToClipboard(`${title}\n${String(html).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()}`));
+      wireDictionaryLinks(els.panelBody);
+    }catch(error){console.error(error);els.panelBody.innerHTML=emptyState('⚠️','No se pudo abrir esta entrada de biblioteca.');}
   }
 
   function getStrongDictionary(){
