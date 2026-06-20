@@ -830,7 +830,30 @@ document.addEventListener('DOMContentLoaded', async () => {
   els.chapter.addEventListener('change',async()=>{currentChapter=Number(els.chapter.value);updateNavButtons();await loadPassage();});
   els.version.addEventListener('change',()=>{const v=activeVerse();currentVersion=els.version.value;if(compareVersion===currentVersion)compareVersion=Object.keys(data.versions).find(x=>x!==currentVersion)||currentVersion;renderChapter(v);if(activeTab==='comparar')renderCompare(v);});
   els.prev.addEventListener('click',()=>moveChapter(-1)); els.next.addEventListener('click',()=>moveChapter(1));
-  els.tabs.forEach(b=>b.addEventListener('click',()=>activeTab===b.dataset.tab?closePanel():openPanel(b.dataset.tab)));
+  let armedMobileTool = null;
+  let armedMobileTimer = null;
+
+  function clearMobileToolArm(){
+    if(armedMobileTimer){ clearTimeout(armedMobileTimer); armedMobileTimer=null; }
+    els.tabs.forEach(btn=>btn.classList.remove('mobile-tool-btn--armed'));
+    armedMobileTool=null;
+  }
+
+  els.tabs.forEach(b=>b.addEventListener('click',()=>{
+    const isMobileTool = b.classList.contains('mobile-tool-btn') && window.matchMedia('(max-width: 760px)').matches;
+    if(isMobileTool){
+      if(armedMobileTool !== b){
+        clearMobileToolArm();
+        armedMobileTool=b;
+        b.classList.add('mobile-tool-btn--armed');
+        b.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+        armedMobileTimer=setTimeout(clearMobileToolArm, 3500);
+        return;
+      }
+      clearMobileToolArm();
+    }
+    activeTab===b.dataset.tab ? closePanel() : openPanel(b.dataset.tab);
+  }));
   els.search.addEventListener('click',()=>openPanel('buscar'));
   els.close.addEventListener('click',closePanel);
   els.copySelectionText?.addEventListener('click',copySelectedText);
