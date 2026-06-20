@@ -32,7 +32,8 @@ const VerboModules = (() => {
     const exegesis = await loadModuleList(registry.exegesis || []);
     const library = await loadModuleList(registry.library || []);
     const gospel = await loadModuleList(registry.gospel || []);
-    return { registry, bibles, commentaries, dictionaries, exegesis, library, gospel, primary, books: primary.manifest.books };
+    const patristic = await loadModuleList(registry.patristic || []);
+    return { registry, bibles, commentaries, dictionaries, exegesis, library, gospel, patristic, primary, books: primary.manifest.books };
   }
   async function getBookInfo(bookId) {
     const catalog = await getCatalog();
@@ -267,5 +268,26 @@ const VerboModules = (() => {
     return null;
   }
 
-  return { getCatalog,getBookInfo,buildChapterData,loadBible,loadCommentary,loadLinkedEntries,getDictionaryEntry,loadDictionaryEntries,loadDictionaryIndex,loadGospel,searchBible };
+  // Carga un documento patrístico de lectura libre (Padres Apostólicos).
+  // Misma idea que loadGospel: índice de secciones navegable, sin atar
+  // cada sección a un único capítulo bíblico.
+  async function loadPatristic(docId = null) {
+    const registry = await getJSON('modules/registry.json');
+    const paths = docId
+      ? (registry.patristic || []).filter(p => p.includes('/' + docId + '/') || p.endsWith('/' + docId + '/manifest.json'))
+      : (registry.patristic || []);
+    for (const path of paths) {
+      const manifestPath = `modules/${path}`;
+      try {
+        const manifest = await getJSON(manifestPath);
+        const data = await getJSON(resolveFromManifest(manifestPath, manifest.sectionsFile));
+        return { manifest, sections: data.sections || [] };
+      } catch (error) {
+        console.warn(`Documento patrístico omitido: ${manifestPath}`, error);
+      }
+    }
+    return null;
+  }
+
+  return { getCatalog,getBookInfo,buildChapterData,loadBible,loadCommentary,loadLinkedEntries,getDictionaryEntry,loadDictionaryEntries,loadDictionaryIndex,loadGospel,loadPatristic,searchBible };
 })();

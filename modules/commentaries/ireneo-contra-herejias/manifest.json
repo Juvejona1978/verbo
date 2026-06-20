@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 2,
+  "id": "ireneo-contra-herejias",
+  "type": "commentary",
+  "name": "Ireneo de Lyon — Contra las Herejías (Libros I-II)",
+  "abbreviation": "Ireneo",
+  "language": "es",
+  "author": "Ireneo de Lyon",
+  "year": 180,
+  "description": "Selección de pasajes donde Ireneo expone su propia doctrina (no su descripción de los sistemas gnósticos que refuta) anclados a las referencias bíblicas que él mismo cita como argumento. Traducción: Biblioteca Patrística Unción Fresca (UF), 2025, basada en Ante-Nicene Fathers (dominio público). Para leer la obra completa (incluyendo la extensa descripción de las doctrinas gnósticas del Libro I), usa el ícono de Padres Apostólicos.",
+  "license": "UF-NC — Distribución libre no comercial, basada en Creative Commons BY-NC-ND 4.0. Prohibida la venta.",
+  "sourceFormat": "DOCX (traducción propia)",
+  "books": [
+    {
+      "id": "GEN",
+      "name": "Génesis",
+      "number": 1,
+      "file": "books/GEN.json"
+    },
+    {
+      "id": "ISA",
+      "name": "Isaías",
+      "number": 23,
+      "file": "books/ISA.json"
+    },
+    {
+      "id": "MAT",
+      "name": "Mateo",
+      "number": 40,
+      "file": "books/MAT.json"
+    },
+    {
+      "id": "LUK",
+      "name": "Lucas",
+      "number": 42,
+      "file": "books/LUK.json"
+    },
+    {
+      "id": "JHN",
+      "name": "Juan",
+      "number": 43,
+      "file": "books/JHN.json"
+    },
+    {
+      "id": "ACT",
+      "name": "Hechos",
+      "number": 44,
+      "file": "books/ACT.json"
+    },
+    {
+      "id": "ROM",
+      "name": "Romanos",
+      "number": 45,
+      "file": "books/ROM.json"
+    },
+    {
+      "id": "1CO",
+      "name": "1 Corintios",
+      "number": 46,
+      "file": "books/1CO.json"
+    },
+    {
+      "id": "HEB",
+      "name": "Hebreos",
+      "number": 58,
+      "file": "books/HEB.json"
+    },
+    {
+      "id": "REV",
+      "name": "Apocalipsis",
+      "number": 66,
+      "file": "books/REV.json"
+    }
+  ]
+}

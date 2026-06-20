@@ -34,6 +34,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   let currentExegesis = localStorage.getItem('verbo:lastExegesis') || null;
   let gospelData=null;
   let gospelOpenChapter=null;
+  let patristicCatalog=null;
+  let patristicOpenDoc=null;
+  let patristicOpenSection=null;
   let currentBook = localStorage.getItem('verbo:lastBook') || 'ROM';
   let currentChapter = Number(localStorage.getItem('verbo:lastChapter')) || 7;
   const themes = [
@@ -685,7 +688,81 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function renderPadresPanel(){
     els.panelTitle.textContent='Padres Apostólicos';
     els.panelToolbar.innerHTML='';
-    els.panelBody.innerHTML=emptyState('📜','La colección de Padres Apostólicos está en preparación. Pronto encontrarás aquí la Didaché, las cartas de Clemente, Ignacio, Policarpo y más.');
+
+    if(!patristicCatalog){
+      els.panelBody.innerHTML=emptyState('⌛','Cargando colección…');
+      try{
+        const registry=await VerboModules.getCatalog();
+        patristicCatalog=(registry.patristic||[]).map(item=>({id:item.manifest.id,label:item.manifest.abbreviation||item.manifest.name,full:item.manifest.name,manifest:item.manifest}));
+      }catch(error){console.error(error);}
+    }
+    if(!patristicCatalog || !patristicCatalog.length){
+      els.panelBody.innerHTML=emptyState('📜','La colección de Padres Apostólicos está en preparación. Pronto encontrarás aquí la Didaché, las cartas de Clemente, Ignacio, Policarpo y más.');
+      return;
+    }
+
+    // Nivel 3: leyendo una sección específica
+    if(patristicOpenDoc && patristicOpenSection!=null){
+      renderPatristicSection();
+      return;
+    }
+
+    // Nivel 2: índice de secciones de un documento ya elegido
+    if(patristicOpenDoc){
+      await renderPatristicIndex();
+      return;
+    }
+
+    // Nivel 1: lista de documentos disponibles en la colección
+    els.panelBody.innerHTML=`<div class="dictionary-library">${patristicCatalog.map(d=>`
+      <button type="button" class="dictionary-library__item" data-patristic-doc="${d.id}">
+        <span>${escapeHTML(d.full)}</span>
+        <small>${escapeHTML(d.manifest.year||'')}</small>
+      </button>`).join('')}</div>`;
+    document.querySelectorAll('[data-patristic-doc]').forEach(btn=>{
+      btn.addEventListener('click',()=>{ patristicOpenDoc=btn.dataset.patristicDoc; renderPadresPanel(); els.panelBody.scrollTop=0; });
+    });
+  }
+
+  let patristicDocData=null;
+
+  async function renderPatristicIndex(){
+    if(!patristicDocData || patristicDocData.manifest.id!==patristicOpenDoc){
+      els.panelBody.innerHTML=emptyState('⌛','Cargando documento…');
+      try{
+        patristicDocData=await VerboModules.loadPatristic(patristicOpenDoc);
+      }catch(error){console.error(error);}
+    }
+    if(!patristicDocData){
+      els.panelBody.innerHTML=emptyState('⚠️','No se pudo cargar este documento.');
+      return;
+    }
+    els.panelToolbar.innerHTML=`<button class="note-card__copy" id="backToPatristicDocs" type="button">← Colección</button>`;
+    document.getElementById('backToPatristicDocs')?.addEventListener('click',()=>{ patristicOpenDoc=null; patristicDocData=null; renderPadresPanel(); els.panelBody.scrollTop=0; });
+
+    const statusBanner=patristicDocData.manifest.status?`<div class="gospel-match"><div class="gospel-match__label">Estado</div><div style="padding:4px 2px;">${escapeHTML(patristicDocData.manifest.status)}</div></div>`:'';
+
+    const list=patristicDocData.sections.map(s=>`
+      <button type="button" class="dictionary-library__item" data-patristic-section="${s.n}">
+        <span>${escapeHTML(s.title)}</span>
+      </button>`).join('');
+
+    els.panelBody.innerHTML=`${statusBanner}<div class="dictionary-library"><div class="dictionary-library__count">${patristicDocData.sections.length} secciones</div><div>${list}</div></div>`;
+    document.querySelectorAll('[data-patristic-section]').forEach(btn=>{
+      btn.addEventListener('click',()=>{ patristicOpenSection=Number(btn.dataset.patristicSection); renderPadresPanel(); els.panelBody.scrollTop=0; });
+    });
+  }
+
+  function renderPatristicSection(){
+    const section=patristicDocData.sections.find(s=>s.n===patristicOpenSection);
+    if(!section){ els.panelBody.innerHTML=emptyState('⚠️','No se encontró esta sección.'); return; }
+    els.panelToolbar.innerHTML=`<button class="note-card__copy" id="backToPatristicIndex" type="button">← Índice del documento</button>`;
+    document.getElementById('backToPatristicIndex')?.addEventListener('click',()=>{ patristicOpenSection=null; renderPadresPanel(); els.panelBody.scrollTop=0; });
+    els.panelBody.innerHTML=`<article class="dict-entry">
+      <div class="dict-entry__term">${escapeHTML(section.title)}</div>
+      <div class="dict-entry__source">${escapeHTML(patristicDocData.manifest.name)}</div>
+      <div class="dict-entry__def">${nl2p(section.content)}</div>
+    </article>`;
   }
 
   async function renderExegesis(focus=null){
