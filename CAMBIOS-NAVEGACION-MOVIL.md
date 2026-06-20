@@ -10,3 +10,9 @@ En pantallas de hasta 760 px:
 - La leyenda se cierra automáticamente tras 3.5 segundos si no se da el segundo toque.
 - Los paneles ocupan el ancho completo y terminan encima de la barra inferior.
 - En escritorio se conserva la navegación lateral existente.
+
+## Indicador de comentario por versículo
+
+- Los versículos con comentario disponible muestran al final el indicador `💬 Com.`.
+- Al tocarlo se selecciona el versículo y se abre directamente el comentario correspondiente.
+- Los versículos sin comentario no muestran ningún indicador.

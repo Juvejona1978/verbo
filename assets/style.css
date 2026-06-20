@@ -1267,3 +1267,48 @@ body[data-theme="rosewood"] {
   .side-panel--open .side-panel__inner,
   .side-panel--left.side-panel--open .side-panel__inner { width: 100vw; }
 }
+
+/* Indicador discreto al final del versículo cuando existe comentario */
+.verse__comment-link {
+  align-self: baseline;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin: 0 1px 0 2px;
+  padding: 2px 5px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(122, 46, 46, 0.07);
+  color: var(--wine-soft);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.25;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.verse__comment-link:hover,
+.verse__comment-link:focus-visible {
+  background: rgba(122, 46, 46, 0.14);
+  color: var(--wine);
+  outline: none;
+}
+
+.verse__comment-icon {
+  font-size: 11px;
+  line-height: 1;
+}
+
+@media (max-width: 760px) {
+  .verse {
+    flex-wrap: wrap;
+  }
+  .verse__text {
+    min-width: 0;
+  }
+  .verse__comment-link {
+    margin-left: 38px;
+    margin-top: -2px;
+  }
+}

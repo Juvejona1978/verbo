@@ -161,7 +161,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
       } else text.textContent=v.text[currentVersion] || Object.values(v.text)[0] || '';
       const margin=document.createElement('span'); margin.className='marginalia';
-      row.append(num,text,margin); els.list.appendChild(row);
+      row.append(num,text);
+      if(v.hasNote){
+        const commentLink=document.createElement('button');
+        commentLink.type='button';
+        commentLink.className='verse__comment-link';
+        commentLink.innerHTML='<span class="verse__comment-icon" aria-hidden="true">💬</span><span>Com.</span>';
+        commentLink.title='Abrir comentario de este versículo';
+        commentLink.setAttribute('aria-label',`Abrir comentario de ${data.meta.book} ${data.meta.chapter}:${v.n}`);
+        commentLink.addEventListener('click',(e)=>{
+          e.stopPropagation();
+          document.querySelectorAll('.verse--active').forEach(x=>x.classList.remove('verse--active'));
+          row.classList.add('verse--active');
+          openPanel('comentario', v.noteIds?.[0] || null);
+        });
+        row.appendChild(commentLink);
+      }
+      row.appendChild(margin); els.list.appendChild(row);
       text.addEventListener('click',(e)=>{
         if(e.ctrlKey){ copyMode=true; }
         selectVerse(row,v);
