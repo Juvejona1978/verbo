@@ -1121,6 +1121,14 @@ body[data-theme="rosewood"] {
 .dictionary-library__item small { opacity:.58; flex:0 0 auto; }
 .dict-entry__def a.bible { color:var(--accent); text-decoration:underline; text-decoration-thickness:1px; cursor:pointer; }
 
+.gospel-match { border:1px solid var(--accent); border-radius:10px; padding:12px; margin-bottom:14px; background:color-mix(in srgb, var(--accent) 10%, transparent); }
+.gospel-match__label { font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; opacity:.75; margin-bottom:8px; }
+.gospel-match__item { display:block; width:100%; text-align:left; padding:9px 10px; margin-bottom:4px; border:0; border-radius:8px; background:var(--paper); color:inherit; cursor:pointer; font:inherit; }
+.gospel-match__item:last-child { margin-bottom:0; }
+.gospel-match__item:hover { background:color-mix(in srgb, var(--accent) 16%, var(--paper)); }
+.dict-entry__def p { margin:0 0 12px; }
+.dict-entry__def p:last-child { margin-bottom:0; }
+
 
 .side-panel--left {
   position: fixed;

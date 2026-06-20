@@ -33,6 +33,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   let currentDictionary = localStorage.getItem('verbo:lastDictionary') || null;
   let currentExegeticalDict = localStorage.getItem('verbo:lastExegeticalDict') || null;
   let currentExegesis = localStorage.getItem('verbo:lastExegesis') || null;
+  let gospelData=null;
+  let gospelOpenChapter=null;
   let currentBook = localStorage.getItem('verbo:lastBook') || 'ROM';
   let currentChapter = Number(localStorage.getItem('verbo:lastChapter')) || 7;
   const themes = [
@@ -128,6 +130,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       updateSelectionToolbar();
       localStorage.setItem('verbo:lastBook', currentBook);
       localStorage.setItem('verbo:lastChapter', String(currentChapter));
+      gospelOpenChapter=null;
       if (activeTab) renderPanel(activeTab);
       window.scrollTo({top:0, behavior:'smooth'});
     } catch (error) {
@@ -222,7 +225,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function openPanel(tab, focus=null) {
-    activeTab=tab; els.side.classList.toggle('side-panel--left', tab === 'biblioteca'); els.side.classList.add('side-panel--open');
+    activeTab=tab; els.side.classList.toggle('side-panel--left', ['biblioteca','padres','evangelio'].includes(tab)); els.side.classList.add('side-panel--open');
     els.tabs.forEach(b=>b.classList.toggle('tab-rail__btn--active', b.dataset.tab===tab));
     renderPanel(tab,focus);
   }
@@ -259,6 +262,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if(tab==='diccionario') renderDictionaryPanel(focus || activeVerse());
     if(tab==='diccionario-exegetico') renderExegeticalDictionaryPanel(focus || activeVerse());
     if(tab==='biblioteca') renderLibraryPanel(focus || activeVerse());
+    if(tab==='evangelio') renderGospelPanel();
+    if(tab==='padres') renderPadresPanel();
     if(tab==='notas') renderNotes();
     if(tab==='exegesis') renderExegesis(focus || activeVerse());
     if(tab==='tema') renderTheme();
@@ -614,6 +619,103 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     els.panelBody.innerHTML=emptyState('📚','Este recurso está registrado, pero aún no tiene índice compatible.');
+  }
+
+  async function renderGospelPanel(){
+    els.panelTitle.textContent='Evangelio según Jesucristo';
+    els.panelToolbar.innerHTML='';
+    if(!gospelData){
+      els.panelBody.innerHTML=emptyState('⌛','Cargando Evangelio armonizado…');
+      try{
+        gospelData=await VerboModules.loadGospel();
+      }catch(error){console.error(error);}
+    }
+    if(!gospelData){
+      els.panelBody.innerHTML=emptyState('✝️','El Evangelio armonizado está listo para recibir contenido (modules/gospel).');
+      return;
+    }
+    // ¿Hay un capítulo del Evangelio cuya referencia coincide con el libro/capítulo
+    // que se está leyendo ahora en la Biblia principal? Si sí, lo destacamos arriba.
+    const matching=gospelData.chapters.filter(c=>(c.references||[]).some(r=>r.book===currentBook && r.chapter===currentChapter));
+
+    const matchBanner=matching.length?`
+      <div class="gospel-match">
+        <div class="gospel-match__label">Relacionado con esta lectura</div>
+        ${matching.map(c=>`<button type="button" class="gospel-match__item" data-gospel-chapter="${c.n}">Cap. ${c.n} — ${escapeHTML(c.title)}</button>`).join('')}
+      </div>` : '';
+
+    if(gospelOpenChapter){
+      renderGospelChapter(gospelOpenChapter, matchBanner);
+      return;
+    }
+
+    const list=gospelData.chapters.map(c=>`
+      <button type="button" class="dictionary-library__item" data-gospel-chapter="${c.n}">
+        <span>${c.n}. ${escapeHTML(c.title)}</span>
+        <small>${escapeHTML(c.reference_label)}</small>
+      </button>`).join('');
+
+    els.panelBody.innerHTML=`
+      ${matchBanner}
+      <div class="dictionary-library">
+        <input class="dictionary-library__search" id="gospelSearch" type="search" placeholder="Buscar capítulo o pasaje…">
+        <div class="dictionary-library__count">${gospelData.chapters.length} capítulos</div>
+        <div id="gospelList">${list}</div>
+      </div>`;
+
+    wireGospelChapterButtons();
+
+    const searchInput=document.getElementById('gospelSearch');
+    searchInput?.addEventListener('input', e=>{
+      const q=normalizeBibleName(e.target.value);
+      const items=document.querySelectorAll('#gospelList [data-gospel-chapter]');
+      items.forEach(btn=>{
+        const text=normalizeBibleName(btn.textContent);
+        btn.style.display=!q||text.includes(q)?'':'none';
+      });
+    });
+  }
+
+  function wireGospelChapterButtons(){
+    document.querySelectorAll('[data-gospel-chapter]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        gospelOpenChapter=Number(btn.dataset.gospelChapter);
+        renderGospelPanel();
+      });
+    });
+  }
+
+  function renderGospelChapter(n, matchBanner=''){
+    const chapter=gospelData.chapters.find(c=>c.n===n);
+    if(!chapter){ els.panelBody.innerHTML=emptyState('⚠️','No se encontró este capítulo.'); return; }
+    els.panelToolbar.innerHTML=`<button class="note-card__copy" id="backToGospelIndex" type="button">← Índice del Evangelio</button>`;
+    document.getElementById('backToGospelIndex')?.addEventListener('click',()=>{ gospelOpenChapter=null; renderGospelPanel(); });
+
+    const paralelosBlock=chapter.paralelos?`<div class="note-card__title" style="margin-top:18px;">Paralelos íntegros</div><div class="note-card__body">${nl2p(chapter.paralelos)}</div>`:'';
+
+    els.panelBody.innerHTML=`
+      <article class="dict-entry">
+        <div class="dict-entry__term">Cap. ${chapter.n} — ${escapeHTML(chapter.title)}</div>
+        <div class="dict-entry__source">${escapeHTML(chapter.reference_label)}</div>
+        <div class="note-card__title" style="margin-top:14px;">Texto base</div>
+        <div class="dict-entry__def">${nl2p(chapter.texto_base)}</div>
+        ${paralelosBlock}
+        <div class="note-card__title" style="margin-top:18px;">Notas</div>
+        <div class="note-card__body">${nl2p(chapter.notas)}</div>
+      </article>`;
+  }
+
+  // Convierte texto plano con saltos de línea en párrafos HTML simples,
+  // sin alterar ni una palabra del contenido — solo estructura visual.
+  function nl2p(text){
+    if(!text) return '';
+    return text.split(/\n\s*\n/).map(p=>`<p>${escapeHTML(p.trim()).replace(/\n/g,'<br>')}</p>`).join('');
+  }
+
+  async function renderPadresPanel(){
+    els.panelTitle.textContent='Padres Apostólicos';
+    els.panelToolbar.innerHTML='';
+    els.panelBody.innerHTML=emptyState('📜','La colección de Padres Apostólicos está en preparación. Pronto encontrarás aquí la Didaché, las cartas de Clemente, Ignacio, Policarpo y más.');
   }
 
   async function renderExegesis(focus=null){

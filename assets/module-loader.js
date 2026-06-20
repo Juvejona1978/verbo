@@ -31,7 +31,8 @@ const VerboModules = (() => {
     const dictionaries = await loadModuleList(registry.dictionaries || []);
     const exegesis = await loadModuleList(registry.exegesis || []);
     const library = await loadModuleList(registry.library || []);
-    return { registry, bibles, commentaries, dictionaries, exegesis, library, primary, books: primary.manifest.books };
+    const gospel = await loadModuleList(registry.gospel || []);
+    return { registry, bibles, commentaries, dictionaries, exegesis, library, gospel, primary, books: primary.manifest.books };
   }
   async function getBookInfo(bookId) {
     const catalog = await getCatalog();
@@ -246,5 +247,25 @@ const VerboModules = (() => {
     const first=bibleResults.find(b=>b.manifest.id===registry.defaultBible)||bibleResults[0];
     return {meta:{book:first.bookInfo.name,bookId,chapter,version:first.manifest.id,versionFull:first.manifest.name},versions,verses,notes};
   }
-  return { getCatalog,getBookInfo,buildChapterData,loadBible,loadCommentary,loadLinkedEntries,getDictionaryEntry,loadDictionaryEntries,loadDictionaryIndex,searchBible };
+  // Carga el módulo de Evangelio armonizado (capítulos temáticos propios,
+  // no ligados 1:1 a capítulo bíblico, sino a una o más referencias).
+  async function loadGospel(gospelId = null) {
+    const registry = await getJSON('modules/registry.json');
+    const paths = gospelId
+      ? (registry.gospel || []).filter(p => p.includes('/' + gospelId + '/') || p.endsWith('/' + gospelId + '/manifest.json'))
+      : (registry.gospel || []);
+    for (const path of paths) {
+      const manifestPath = `modules/${path}`;
+      try {
+        const manifest = await getJSON(manifestPath);
+        const data = await getJSON(resolveFromManifest(manifestPath, manifest.chaptersFile));
+        return { manifest, chapters: data.chapters || [] };
+      } catch (error) {
+        console.warn(`Evangelio omitido: ${manifestPath}`, error);
+      }
+    }
+    return null;
+  }
+
+  return { getCatalog,getBookInfo,buildChapterData,loadBible,loadCommentary,loadLinkedEntries,getDictionaryEntry,loadDictionaryEntries,loadDictionaryIndex,loadGospel,searchBible };
 })();

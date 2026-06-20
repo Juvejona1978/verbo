@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 2,
+  "id": "evangelio-uf",
+  "type": "gospel",
+  "name": "Evangelio según Jesucristo — Versión Cronológica Fluida",
+  "abbreviation": "Evangelio UF",
+  "language": "es",
+  "author": "UF — Unción Fresca",
+  "year": 2025,
+  "description": "Armonización de los cuatro Evangelios en 100 capítulos, en orden cronológico, traducida directamente del griego (NA28, SBLGNT) con revisión paralela en Textus Receptus y Majority Text. Incluye texto base, paralelos íntegros entre los cuatro evangelistas y notas de contexto.",
+  "license": "Distribución libre no comercial, citando la fuente completa. © 2025 UF, Unción Fresca.",
+  "sourceFile": "EVANGELIO_DE_JESUS.pdf",
+  "chaptersFile": "chapters.json",
+  "totalChapters": 100
+}
