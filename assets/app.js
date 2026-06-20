@@ -591,7 +591,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function renderGospelPanel(){
-    els.panelTitle.textContent='Evangelio según Jesucristo';
+    els.panelTitle.textContent='Evangelio cronológico de Jesús';
     els.panelToolbar.innerHTML='';
     if(!gospelData){
       els.panelBody.innerHTML=emptyState('⌛','Cargando Evangelio armonizado…');
