@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 2,
+  "id": "barclay",
+  "type": "library",
+  "name": "Palabras Griegas del Nuevo Testamento",
+  "abbreviation": "Barclay",
+  "language": "es",
+  "author": "William Barclay",
+  "description": "Estudio de 96 palabras clave del griego del Nuevo Testamento, su trasfondo histórico y su significado teológico. No es un léxico Strong exhaustivo: cubre solo las palabras que Barclay eligió desarrollar en ensayo.",
+  "sourceFormat": "MySword SQLite",
+  "sourceFile": "Barclay_dct.mybible",
+  "entriesFile": "entries.json"
+}

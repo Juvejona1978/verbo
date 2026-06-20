@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "id": "nelson",
+  "type": "library",
+  "name": "Diccionario Bíblico Nelson",
+  "abbreviation": "Nelson",
+  "language": "es",
+  "author": "",
+  "sourceFormat": "MySword SQLite",
+  "sourceFile": "diccionarionelson_dct.mybible",
+  "entriesFile": "entries.json"
+}

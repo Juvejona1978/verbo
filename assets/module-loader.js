@@ -91,9 +91,10 @@ const VerboModules = (() => {
 
   async function loadDictionaryEntries(dictionaryId=null) {
     const registry = await getJSON('modules/registry.json');
+    const allPaths = [...(registry.dictionaries || []), ...(registry.library || [])];
     const paths = dictionaryId
-      ? (registry.dictionaries || []).filter(path => path.includes(`/` + dictionaryId + `/`) || path.endsWith(`/` + dictionaryId + `/manifest.json`))
-      : (registry.dictionaries || []);
+      ? allPaths.filter(path => path.includes(`/` + dictionaryId + `/`) || path.endsWith(`/` + dictionaryId + `/manifest.json`))
+      : allPaths;
     const resources=[];
     for (const path of paths) {
       const manifestPath=`modules/${path}`;

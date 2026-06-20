@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 2,
+  "id": "arqueologico",
+  "type": "library",
+  "name": "Diccionario Bíblico Arqueológico",
+  "abbreviation": "Arqueológico",
+  "language": "es",
+  "sourceFormat": "MySword SQLite",
+  "sourceFile": "Dicc_Arqueologico_biblico_dct.mybible",
+  "entriesFile": "entries.json"
+}

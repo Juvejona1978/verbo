@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "id": "geografia",
+  "type": "library",
+  "name": "Diccionario de Geografía Bíblica",
+  "abbreviation": "Geografía",
+  "language": "es",
+  "author": "H. Martens",
+  "sourceFormat": "MySword SQLite",
+  "sourceFile": "Dicc_Geografia_Biblica_dct.mybible",
+  "entriesFile": "entries.json"
+}

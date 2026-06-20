@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let searchState = null;
   let currentCommentary = localStorage.getItem('verbo:lastCommentary') || null;
   let currentDictionary = localStorage.getItem('verbo:lastDictionary') || null;
+  let currentExegeticalDict = localStorage.getItem('verbo:lastExegeticalDict') || null;
   let currentExegesis = localStorage.getItem('verbo:lastExegesis') || null;
   let currentBook = localStorage.getItem('verbo:lastBook') || 'ROM';
   let currentChapter = Number(localStorage.getItem('verbo:lastChapter')) || 7;
@@ -50,8 +51,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   const escapeHTML = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[ch]));
   const bibleCatalog = () => catalog.bibles.map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path }));
   const commentaryCatalog = () => (catalog.commentaries || []).map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest }));
-  const dictionaryCatalog = () => (catalog.dictionaries || []).filter(item => item.manifest.id === 'multilexico').map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest, linked:Boolean(item.manifest.books?.length) }));
-  const libraryCatalog = () => [ ...(catalog.library || []), ...(catalog.dictionaries || []).filter(item => item.manifest.id !== 'multilexico') ].map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest, linked:Boolean(item.manifest.books?.length), type:item.manifest.type || 'resource' }));
+  // Léxico Strong: módulos numéricos (G1234 / H1234) consultados al tocar una etiqueta Strong en el texto.
+  const isStrongLexicon = item => Boolean(item.manifest.strong) || item.manifest.id === 'multilexico';
+  // Diccionario exegético: NO es léxico Strong, pero SÍ está anclado a pasaje (capítulo:versículo),
+  // como Barclay — se comporta como un comentario de palabras clave, no como consulta libre por tema.
+  const isExegeticalDictionary = item => !isStrongLexicon(item) && Boolean(item.manifest.books?.length);
+  const dictionaryCatalog = () => (catalog.dictionaries || []).filter(isStrongLexicon).map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest, linked:Boolean(item.manifest.books?.length) }));
+  const exegeticalDictionaryCatalog = () => (catalog.dictionaries || []).filter(isExegeticalDictionary).map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest }));
+  // Biblioteca: todo lo demás — recursos de consulta libre por palabra/tema, sin ancla a versículo
+  // (ej. Diccionario Nelson), más Padres Apostólicos y libros adicionales.
+  const libraryCatalog = () => [ ...(catalog.library || []), ...(catalog.dictionaries || []).filter(item => !isStrongLexicon(item) && !isExegeticalDictionary(item)) ].map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest, linked:Boolean(item.manifest.books?.length), type:item.manifest.type || 'resource' }));
   const exegesisCatalog = () => (catalog.exegesis || []).map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest }));
   const bookAbbr = { GEN:'Gn', EXO:'Ex', LEV:'Lv', NUM:'Nm', DEU:'Dt', JOS:'Jos', JDG:'Jue', RUT:'Rt', '1SA':'1 S', '2SA':'2 S', '1KI':'1 R', '2KI':'2 R', '1CH':'1 Cr', '2CH':'2 Cr', EZR:'Esd', NEH:'Neh', EST:'Est', JOB:'Job', PSA:'Sal', PRO:'Pr', ECC:'Ec', SNG:'Cnt', ISA:'Is', JER:'Jer', LAM:'Lm', EZK:'Ez', DAN:'Dn', HOS:'Os', JOL:'Jl', AMO:'Am', OBA:'Abd', JON:'Jon', MIC:'Mi', NAM:'Nah', HAB:'Hab', ZEP:'Sof', HAG:'Hag', ZEC:'Zac', MAL:'Mal', MAT:'Mt', MRK:'Mc', LUK:'Lc', JHN:'Jn', ACT:'Hch', ROM:'Ro', '1CO':'1 Cor', '2CO':'2 Cor', GAL:'Gá', EPH:'Ef', PHP:'Fil', COL:'Col', '1TH':'1 Tes', '2TH':'2 Tes', '1TI':'1 Ti', '2TI':'2 Ti', TIT:'Tit', PHM:'Flm', HEB:'Heb', JAS:'Stg', '1PE':'1 P', '2PE':'2 P', '1JN':'1 Jn', '2JN':'2 Jn', '3JN':'3 Jn', JUD:'Jud', REV:'Ap' };
   const compactRef = (bookId=currentBook, chapter=currentChapter, verses=[]) => {
@@ -248,6 +257,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     if(tab==='comparar'){ els.panelTitle.textContent='Comparar versiones'; renderCompare(focus||activeVerse()); }
     if(tab==='diccionario') renderDictionaryPanel(focus || activeVerse());
+    if(tab==='diccionario-exegetico') renderExegeticalDictionaryPanel(focus || activeVerse());
     if(tab==='biblioteca') renderLibraryPanel(focus || activeVerse());
     if(tab==='notas') renderNotes();
     if(tab==='exegesis') renderExegesis(focus || activeVerse());
@@ -543,6 +553,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     currentDictionary=selected.id;
     localStorage.setItem('verbo:lastDictionary', currentDictionary);
     els.panelBody.innerHTML=emptyState('🔤','Pulsa un código Strong en una Biblia compatible para consultar el Multiléxico.');
+  }
+
+  async function renderExegeticalDictionaryPanel(focus=null){
+    els.panelTitle.textContent='Diccionario exegético';
+    const installed=exegeticalDictionaryCatalog();
+    if(!installed.length){ els.panelToolbar.innerHTML=''; els.panelBody.innerHTML=emptyState('📖','No hay diccionarios exegéticos instalados todavía (ej. Barclay).'); return; }
+    if(!installed.some(d=>d.id===currentExegeticalDict)) currentExegeticalDict=installed[0].id;
+    const options=installed.map(d=>`<option value="${d.id}" ${d.id===currentExegeticalDict?'selected':''}>${escapeHTML(d.label)}</option>`).join('');
+    els.panelToolbar.innerHTML=`<div class="compare-toolbar"><span class="compare-toolbar__label">Diccionario</span><select class="compare-toolbar__select" id="exegeticalDictSelect">${options}</select></div>`;
+    document.getElementById('exegeticalDictSelect')?.addEventListener('change', async e=>{
+      currentExegeticalDict=e.target.value;
+      localStorage.setItem('verbo:lastExegeticalDict', currentExegeticalDict);
+      await renderExegeticalDictionaryPanel(activeVerse());
+    });
+    const selected=installed.find(d=>d.id===currentExegeticalDict);
+    try{
+      const result=await VerboModules.loadCommentary(`modules/${selected.path}`, currentBook, currentChapter);
+      const entries=result.entries||[];
+      if(!entries.length){ els.panelBody.innerHTML=emptyState('📖',`${selected.label} no tiene entradas para este capítulo.`); return; }
+      els.panelBody.innerHTML=entries.map((entry,i)=>`<div class="note-card" data-exeg-entry="${i}"><div class="note-card__ref">${escapeHTML(entry.title||`${currentBook} ${currentChapter}`)}</div><div class="note-card__author">${escapeHTML(selected.label)}</div><div class="note-card__body">${entry.content||entry.html||''}</div></div>`).join('');
+      if(focus){
+        const verseEntry=entries.findIndex(e=>{ const start=Number(e.reference?.verseStart); const end=Number(e.reference?.verseEnd ?? start); return focus>=start && focus<=end; });
+        if(verseEntry>=0){ const target=els.panelBody.querySelector(`[data-exeg-entry="${verseEntry}"]`); target?.scrollIntoView({behavior:'smooth',block:'start'}); }
+      }
+    }catch(error){ console.error(error); els.panelBody.innerHTML=emptyState('⚠️',`No se pudo cargar ${selected.label} para este capítulo.`); }
   }
 
 
