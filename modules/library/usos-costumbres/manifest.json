@@ -9,5 +9,6 @@
   "description": "Libro de 32 capítulos sobre vida cotidiana, costumbres y oficios en las tierras bíblicas. Navegable en orden secuencial (no es un diccionario alfabético por tema).",
   "sourceFormat": "MySword SQLite",
   "sourceFile": "Usos_costumbres_tierra_biblicas_dct.mybible",
-  "entriesFile": "entries.json"
+  "entriesFile": "entries.json",
+  "indexFile": "index.json"
 }

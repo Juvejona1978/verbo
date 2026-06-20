@@ -60,11 +60,14 @@ const VerboModules = (() => {
   }
   async function getDictionaryEntry(code, dictionaryId=null) {
     const registry = await getJSON('modules/registry.json');
-    const normalized = String(code || '').toUpperCase();
-    const prefix = /^[GH]/.test(normalized) ? normalized[0] : 'OTHER';
+    const rawCode = String(code || '');
+    const isStrongCode = /^[GH]\d+$/i.test(rawCode);
+    const normalized = isStrongCode ? rawCode.toUpperCase() : rawCode;
+    const prefix = isStrongCode ? normalized[0] : 'OTHER';
+    const allPaths = [...(registry.dictionaries || []), ...(registry.library || [])];
     const dictionaryPaths = dictionaryId
-      ? (registry.dictionaries || []).filter(path => path.includes(`/` + dictionaryId + `/`) || path.endsWith(`/` + dictionaryId + `/manifest.json`))
-      : (registry.dictionaries || []);
+      ? allPaths.filter(path => path.includes(`/` + dictionaryId + `/`) || path.endsWith(`/` + dictionaryId + `/manifest.json`))
+      : allPaths;
     for (const path of dictionaryPaths) {
       const manifestPath=`modules/${path}`;
       let manifest;
@@ -84,6 +87,33 @@ const VerboModules = (() => {
         const data=await getJSON(resolveFromManifest(manifestPath,manifest.entriesFile));
         const entry=(data.entries || data)?.[normalized];
         if (entry) return { manifest, code:normalized, entry:typeof entry==='string'?{html:entry}:entry };
+      }
+    }
+    return null;
+  }
+
+  // Carga solo el índice liviano (código + término) para mostrar la lista navegable
+  // sin descargar el contenido completo (que puede pesar varios MB). Si el módulo
+  // no declara indexFile, cae de vuelta a cargar las entradas completas (compatibilidad).
+  async function loadDictionaryIndex(dictionaryId) {
+    const registry = await getJSON('modules/registry.json');
+    const allPaths = [...(registry.dictionaries || []), ...(registry.library || [])];
+    const paths = allPaths.filter(path => path.includes(`/` + dictionaryId + `/`) || path.endsWith(`/` + dictionaryId + `/manifest.json`));
+    for (const path of paths) {
+      const manifestPath = `modules/${path}`;
+      try {
+        const manifest = await getJSON(manifestPath);
+        if (manifest.indexFile) {
+          const data = await getJSON(resolveFromManifest(manifestPath, manifest.indexFile));
+          return { manifest, entries: data.entries || data || {}, lightweight: true };
+        }
+        // Sin índice declarado: respaldo a cargar el archivo completo.
+        if (manifest.entriesFile) {
+          const data = await getJSON(resolveFromManifest(manifestPath, manifest.entriesFile));
+          return { manifest, entries: data.entries || data || {}, lightweight: false };
+        }
+      } catch (error) {
+        console.warn(`Índice omitido: ${manifestPath}`, error);
       }
     }
     return null;
@@ -216,5 +246,5 @@ const VerboModules = (() => {
     const first=bibleResults.find(b=>b.manifest.id===registry.defaultBible)||bibleResults[0];
     return {meta:{book:first.bookInfo.name,bookId,chapter,version:first.manifest.id,versionFull:first.manifest.name},versions,verses,notes};
   }
-  return { getCatalog,getBookInfo,buildChapterData,loadBible,loadCommentary,loadLinkedEntries,getDictionaryEntry,loadDictionaryEntries,searchBible };
+  return { getCatalog,getBookInfo,buildChapterData,loadBible,loadCommentary,loadLinkedEntries,getDictionaryEntry,loadDictionaryEntries,loadDictionaryIndex,searchBible };
 })();

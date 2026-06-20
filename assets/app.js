@@ -507,15 +507,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function renderDictionaryLibrary(selected){
     els.panelBody.innerHTML=emptyState('⌛','Cargando índice del diccionario…');
     try{
-      const resources=await VerboModules.loadDictionaryEntries(selected.id);
-      const resource=resources[0];
+      const resource=await VerboModules.loadDictionaryIndex(selected.id);
       if(!resource){els.panelBody.innerHTML=emptyState('⚠️','No se pudo cargar este diccionario.');return;}
       const items=Object.entries(resource.entries).map(([code,entry])=>({code,entry,title:dictionaryEntryTitle(code,entry)})).sort((a,b)=>a.title.localeCompare(b.title,'es'));
       els.panelBody.innerHTML=`<div class="dictionary-library"><input class="dictionary-library__search" id="dictionaryLibrarySearch" type="search" placeholder="Buscar palabra o tema…"><div class="dictionary-library__count">${items.length} estudios disponibles</div><div id="dictionaryLibraryList"></div></div>`;
       const list=document.getElementById('dictionaryLibraryList');
       const draw=(query='')=>{
         const q=normalizeBibleName(query);
-        const filtered=!q?items:items.filter(x=>normalizeBibleName(x.title+' '+x.code+' '+(x.entry.html||'').replace(/<[^>]+>/g,' ')).includes(q));
+        const filtered=!q?items:items.filter(x=>normalizeBibleName(x.title).includes(q));
         list.innerHTML=filtered.map(x=>`<button type="button" class="dictionary-library__item" data-dict-code="${escapeHTML(x.code)}"><span>${escapeHTML(x.title)}</span><small>${escapeHTML(x.code)}</small></button>`).join('')||emptyState('🔎','No hay resultados.');
         list.querySelectorAll('[data-dict-code]').forEach(btn=>btn.addEventListener('click',()=>openLibraryDictionaryEntry(selected, btn.dataset.dictCode)));
       };

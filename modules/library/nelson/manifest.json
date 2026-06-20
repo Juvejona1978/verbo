@@ -8,5 +8,6 @@
   "author": "",
   "sourceFormat": "MySword SQLite",
   "sourceFile": "diccionarionelson_dct.mybible",
-  "entriesFile": "entries.json"
+  "entriesFile": "entries.json",
+  "indexFile": "index.json"
 }

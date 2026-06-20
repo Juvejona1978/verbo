@@ -8,5 +8,6 @@
   "author": "H. Martens",
   "sourceFormat": "MySword SQLite",
   "sourceFile": "Dicc_Geografia_Biblica_dct.mybible",
-  "entriesFile": "entries.json"
+  "entriesFile": "entries.json",
+  "indexFile": "index.json"
 }

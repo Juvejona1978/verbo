@@ -7,5 +7,6 @@
   "language": "es",
   "sourceFormat": "MySword SQLite",
   "sourceFile": "Dicc_Arqueologico_biblico_dct.mybible",
-  "entriesFile": "entries.json"
+  "entriesFile": "entries.json",
+  "indexFile": "index.json"
 }
