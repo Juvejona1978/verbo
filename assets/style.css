@@ -281,14 +281,15 @@ body {
 /* ---------- Rail de pestañas (derecha) ---------- */
 
 .library-rail {
-  position: fixed;
-  left: 18px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 40;
+  width: var(--rail-width);
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 10px;
+  border-right: 1px solid rgba(91, 54, 49, .12);
+  z-index: 40;
 }
 .library-rail__btn {
   width: 44px;
@@ -1131,37 +1132,29 @@ body[data-theme="rosewood"] {
 
 
 .side-panel--left {
-  position: fixed;
-  top: 64px;
-  bottom: 0;
-  left: 0;
-  right: auto;
-  width: var(--panel-width);
-  z-index: 35;
   border-left: 0;
-  border-right: 1px solid rgba(91, 54, 49, .12);
-  box-shadow: 24px 0 60px rgba(71, 46, 35, .14);
-  transform: translateX(-102%);
-  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  border-right: 1px solid var(--rule);
+  order: -1;
 }
 
-.side-panel--left.side-panel--open {
-  transform: translateX(0);
-}
-
-.side-panel--left:not(.side-panel--open) {
-  transform: translateX(-102%);
-}
+.library-rail { order: -2; }
 
 @media (max-width: 760px) {
-  .library-rail { left: 10px; bottom: 18px; top: auto; transform: none; }
+  .library-rail { order: 0; }
   .library-rail__btn { width: 40px; height: 40px; }
+  .side-panel--left.side-panel--open {
+    position: fixed;
+    top: 64px;
+    bottom: 0;
+    left: var(--rail-width);
+    width: min(88vw, var(--panel-width));
+    z-index: 35;
+    box-shadow: 24px 0 60px rgba(71, 46, 35, .14);
+  }
+  .side-panel--left.side-panel--open .side-panel__inner {
+    width: min(88vw, var(--panel-width));
+  }
 }
 
 /* Ajustes finales Biblioteca/Multiléxico */
-.side-panel--left .side-panel__inner { height: 100%; }
 .library-rail__btn.tab-rail__btn--active { color: var(--paper-raised); background: var(--wine); }
-@media (max-width: 760px) {
-  .side-panel--left { top: 0; width: min(88vw, var(--panel-width)); }
-  .side-panel--left .side-panel__inner { width: min(88vw, var(--panel-width)); }
-}
