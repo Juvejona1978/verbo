@@ -513,29 +513,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     }catch(error){console.error(error);els.panelBody.innerHTML=emptyState('⚠️','No se pudo abrir el índice del diccionario.');}
   }
 
-  async function renderDictionaryPanel(focus=null){
-    els.panelTitle.textContent='Diccionario';
+  function getStrongDictionary(){
     const installed=dictionaryCatalog();
-    if(!installed.length){ els.panelToolbar.innerHTML=''; els.panelBody.innerHTML=emptyState('📚','No hay diccionarios instalados todavía.'); return; }
-    if(!installed.some(d=>d.id===currentDictionary)) currentDictionary=installed[0].id;
-    const selected=installed.find(d=>d.id===currentDictionary) || installed[0];
-    const options=installed.map(d=>`<option value="${d.id}" ${d.id===currentDictionary?'selected':''}>${escapeHTML(d.label)}</option>`).join('');
-    els.panelToolbar.innerHTML=`<div class="compare-toolbar"><span class="compare-toolbar__label">Diccionario</span><select class="compare-toolbar__select" id="dictionarySelect">${options}</select></div>`;
-    document.getElementById('dictionarySelect')?.addEventListener('change', e=>{
-      currentDictionary=e.target.value;
-      localStorage.setItem('verbo:lastDictionary', currentDictionary);
-      renderDictionaryPanel(activeVerse());
-    });
-    if(selected.linked){
-      els.panelBody.innerHTML=emptyState('⌛','Cargando diccionario del pasaje…');
-      try{
-        const resource=await VerboModules.loadLinkedEntries(selected.path,currentBook,currentChapter);
-        renderLinkedResourceEntries(resource, resource.entries, focus, '📚', 'Este capítulo no tiene entradas en este diccionario.');
-      }catch(error){ console.error(error); els.panelBody.innerHTML=emptyState('⚠️','No se pudo abrir este diccionario.'); }
-      return;
-    }
-    if(selected.id==='barclay') await renderDictionaryLibrary(selected);
-    else els.panelBody.innerHTML=emptyState('🔤','Pulsa un código Strong en una Biblia compatible para consultar este diccionario.');
+    return installed.find(d=>d.id==='multilexico') || installed[0] || null;
+  }
+
+  async function renderDictionaryPanel(focus=null){
+    els.panelTitle.textContent='Multiléxico Strong';
+    els.panelToolbar.innerHTML='';
+    const selected=getStrongDictionary();
+    if(!selected){ els.panelBody.innerHTML=emptyState('📚','No hay diccionario Strong/Multiléxico instalado todavía.'); return; }
+    currentDictionary=selected.id;
+    localStorage.setItem('verbo:lastDictionary', currentDictionary);
+    els.panelBody.innerHTML=emptyState('🔤','Pulsa un código Strong en una Biblia compatible para consultar el Multiléxico.');
   }
 
 
@@ -609,19 +599,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function openDictionary(code){
     openPanel('diccionario');
-    const installed=dictionaryCatalog();
-    if(!installed.some(d=>d.id===currentDictionary)) currentDictionary=installed[0]?.id || null;
-    els.panelTitle.textContent=`Diccionario · ${code}`;
-    if(installed.length){
-      const options=installed.map(d=>`<option value="${d.id}" ${d.id===currentDictionary?'selected':''}>${escapeHTML(d.label)}</option>`).join('');
-      els.panelToolbar.innerHTML=`<div class="compare-toolbar"><span class="compare-toolbar__label">Diccionario</span><select class="compare-toolbar__select" id="dictionarySelect">${options}</select></div>`;
-      document.getElementById('dictionarySelect')?.addEventListener('change', e=>{
-        currentDictionary=e.target.value;
-        localStorage.setItem('verbo:lastDictionary', currentDictionary);
-        openDictionary(code);
-      });
-    }
-    els.panelBody.innerHTML=emptyState('⌛','Buscando entrada…');
+    const selected=getStrongDictionary();
+    currentDictionary=selected?.id || null;
+    if(currentDictionary) localStorage.setItem('verbo:lastDictionary', currentDictionary);
+    els.panelTitle.textContent=`Multiléxico Strong · ${code}`;
+    els.panelToolbar.innerHTML='';
+    els.panelBody.innerHTML=emptyState('⌛','Buscando entrada en Multiléxico…');
     try{
       const result=await VerboModules.getDictionaryEntry(code, currentDictionary);
       if(!result){ els.panelBody.innerHTML=emptyState('🔎',`No se encontró una entrada para ${code} en el diccionario seleccionado.`); return; }
