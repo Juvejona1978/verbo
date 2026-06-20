@@ -280,6 +280,31 @@ body {
 
 /* ---------- Rail de pestañas (derecha) ---------- */
 
+.library-rail {
+  position: fixed;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.library-rail__btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  border: 1px solid rgba(91, 54, 49, .18);
+  background: rgba(255,255,255,.82);
+  color: var(--muted);
+  box-shadow: var(--shadow-soft);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.library-rail__btn svg { width: 20px; height: 20px; }
+.library-rail__btn:hover, .library-rail__btn--active { color: var(--accent); background: var(--surface); }
+
 .tab-rail {
   width: var(--rail-width);
   flex-shrink: 0;
@@ -1095,3 +1120,25 @@ body[data-theme="rosewood"] {
 .dictionary-library__item:hover { background:color-mix(in srgb, var(--accent) 8%, transparent); }
 .dictionary-library__item small { opacity:.58; flex:0 0 auto; }
 .dict-entry__def a.bible { color:var(--accent); text-decoration:underline; text-decoration-thickness:1px; cursor:pointer; }
+
+
+.side-panel--left {
+  right: auto;
+  left: 0;
+  border-left: 0;
+  border-right: 1px solid rgba(91, 54, 49, .12);
+  box-shadow: 24px 0 60px rgba(71, 46, 35, .14);
+}
+
+.side-panel--left.side-panel--open {
+  transform: translateX(0);
+}
+
+.side-panel--left:not(.side-panel--open) {
+  transform: translateX(-102%);
+}
+
+@media (max-width: 760px) {
+  .library-rail { left: 10px; bottom: 18px; top: auto; transform: none; }
+  .library-rail__btn { width: 40px; height: 40px; }
+}

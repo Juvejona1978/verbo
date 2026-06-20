@@ -30,7 +30,8 @@ const VerboModules = (() => {
     const commentaries = await loadModuleList(registry.commentaries || []);
     const dictionaries = await loadModuleList(registry.dictionaries || []);
     const exegesis = await loadModuleList(registry.exegesis || []);
-    return { registry, bibles, commentaries, dictionaries, exegesis, primary, books: primary.manifest.books };
+    const library = await loadModuleList(registry.library || []);
+    return { registry, bibles, commentaries, dictionaries, exegesis, library, primary, books: primary.manifest.books };
   }
   async function getBookInfo(bookId) {
     const catalog = await getCatalog();
@@ -54,7 +55,7 @@ const VerboModules = (() => {
     const bookData = await getJSON(resolveFromManifest(manifestPath, bookInfo.file));
     return { manifest, entries:(bookData.entries || []).filter(entry => {
       const start=entry.reference.chapterStart, end=entry.reference.chapterEnd ?? start;
-      return chapter >= start && chapter <= end;
+      return (chapter >= start && chapter <= end) || (chapter === 1 && start === 0);
     }) };
   }
   async function getDictionaryEntry(code, dictionaryId=null) {
@@ -123,7 +124,7 @@ const VerboModules = (() => {
       const ref = entry.reference || {};
       const start = Number(ref.chapterStart ?? chapter);
       const end = Number(ref.chapterEnd ?? start);
-      return chapter >= start && chapter <= end;
+      return (chapter >= start && chapter <= end) || (chapter === 1 && start === 0);
     });
     return { manifest, entries };
   }
@@ -184,7 +185,7 @@ const VerboModules = (() => {
       const ref=entry.reference || {};
       const chStart=Number(ref.chapterStart ?? chapter);
       const chEnd=Number(ref.chapterEnd ?? chStart);
-      if(chapter < chStart || chapter > chEnd) return;
+      if((chapter < chStart || chapter > chEnd) && !(chapter === 1 && chStart === 0)) return;
 
       let start=Number(ref.verseStart);
       let end=Number(ref.verseEnd ?? ref.verseStart);

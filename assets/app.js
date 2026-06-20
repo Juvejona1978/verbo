@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     panelBody: document.getElementById('panelBody'),
     close: document.getElementById('panelClose'),
     search: document.getElementById('searchTrigger'),
-    tabs: [...document.querySelectorAll('.tab-rail__btn')],
+    tabs: [...document.querySelectorAll('.tab-rail__btn, .library-rail__btn')],
     selectionToolbar: document.getElementById('selectionToolbar'),
     selectionCount: document.getElementById('selectionCount'),
     copySelectionText: document.getElementById('copySelectionText'),
@@ -50,7 +50,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const escapeHTML = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[ch]));
   const bibleCatalog = () => catalog.bibles.map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path }));
   const commentaryCatalog = () => (catalog.commentaries || []).map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest }));
-  const dictionaryCatalog = () => (catalog.dictionaries || []).map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest, linked:Boolean(item.manifest.books?.length) }));
+  const dictionaryCatalog = () => (catalog.dictionaries || []).filter(item => item.manifest.strong || item.manifest.id === 'multilexico' || item.manifest.id.includes('strong')).map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest, linked:Boolean(item.manifest.books?.length) }));
+  const libraryCatalog = () => [ ...(catalog.library || []), ...(catalog.dictionaries || []).filter(item => !(item.manifest.strong || item.manifest.id === 'multilexico' || item.manifest.id.includes('strong'))) ].map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest, linked:Boolean(item.manifest.books?.length), type:item.manifest.type || 'resource' }));
   const exegesisCatalog = () => (catalog.exegesis || []).map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest }));
   const bookAbbr = { GEN:'Gn', EXO:'Ex', LEV:'Lv', NUM:'Nm', DEU:'Dt', JOS:'Jos', JDG:'Jue', RUT:'Rt', '1SA':'1 S', '2SA':'2 S', '1KI':'1 R', '2KI':'2 R', '1CH':'1 Cr', '2CH':'2 Cr', EZR:'Esd', NEH:'Neh', EST:'Est', JOB:'Job', PSA:'Sal', PRO:'Pr', ECC:'Ec', SNG:'Cnt', ISA:'Is', JER:'Jer', LAM:'Lm', EZK:'Ez', DAN:'Dn', HOS:'Os', JOL:'Jl', AMO:'Am', OBA:'Abd', JON:'Jon', MIC:'Mi', NAM:'Nah', HAB:'Hab', ZEP:'Sof', HAG:'Hag', ZEC:'Zac', MAL:'Mal', MAT:'Mt', MRK:'Mc', LUK:'Lc', JHN:'Jn', ACT:'Hch', ROM:'Ro', '1CO':'1 Cor', '2CO':'2 Cor', GAL:'Gá', EPH:'Ef', PHP:'Fil', COL:'Col', '1TH':'1 Tes', '2TH':'2 Tes', '1TI':'1 Ti', '2TI':'2 Ti', TIT:'Tit', PHM:'Flm', HEB:'Heb', JAS:'Stg', '1PE':'1 P', '2PE':'2 P', '1JN':'1 Jn', '2JN':'2 Jn', '3JN':'3 Jn', JUD:'Jud', REV:'Ap' };
   const compactRef = (bookId=currentBook, chapter=currentChapter, verses=[]) => {
@@ -212,11 +213,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function openPanel(tab, focus=null) {
-    activeTab=tab; els.side.classList.add('side-panel--open');
+    activeTab=tab; els.side.classList.toggle('side-panel--left', tab === 'biblioteca'); els.side.classList.add('side-panel--open');
     els.tabs.forEach(b=>b.classList.toggle('tab-rail__btn--active', b.dataset.tab===tab));
     renderPanel(tab,focus);
   }
-  function closePanel(){ activeTab=null; els.side.classList.remove('side-panel--open'); els.tabs.forEach(b=>b.classList.remove('tab-rail__btn--active')); }
+  function closePanel(){ activeTab=null; els.side.classList.remove('side-panel--open','side-panel--left'); els.tabs.forEach(b=>b.classList.remove('tab-rail__btn--active')); }
 
   function renderPanel(tab, focus=null) {
     els.panelToolbar.innerHTML='';
@@ -247,6 +248,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     if(tab==='comparar'){ els.panelTitle.textContent='Comparar versiones'; renderCompare(focus||activeVerse()); }
     if(tab==='diccionario') renderDictionaryPanel(focus || activeVerse());
+    if(tab==='biblioteca') renderLibraryPanel(focus || activeVerse());
     if(tab==='notas') renderNotes();
     if(tab==='exegesis') renderExegesis(focus || activeVerse());
     if(tab==='tema') renderTheme();
@@ -534,6 +536,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     if(selected.id==='barclay') await renderDictionaryLibrary(selected);
     else els.panelBody.innerHTML=emptyState('🔤','Pulsa un código Strong en una Biblia compatible para consultar este diccionario.');
+  }
+
+
+
+  async function renderLibraryPanel(focus=null){
+    els.panelTitle.textContent='Biblioteca';
+    const installed=libraryCatalog();
+    if(!installed.length){
+      els.panelToolbar.innerHTML='';
+      els.panelBody.innerHTML=emptyState('📚','La Biblioteca está lista. Aquí aparecerán diccionarios de referencia, Padres Apostólicos y libros adicionales.');
+      return;
+    }
+    let currentLibrary=localStorage.getItem('verbo:lastLibrary');
+    if(!installed.some(x=>x.id===currentLibrary)) currentLibrary=installed[0].id;
+    const selected=installed.find(x=>x.id===currentLibrary) || installed[0];
+    const options=installed.map(x=>`<option value="${x.id}" ${x.id===currentLibrary?'selected':''}>${escapeHTML(x.label)}</option>`).join('');
+    els.panelToolbar.innerHTML=`<div class="compare-toolbar"><span class="compare-toolbar__label">Recurso</span><select class="compare-toolbar__select" id="librarySelect">${options}</select></div>`;
+    document.getElementById('librarySelect')?.addEventListener('change', e=>{
+      localStorage.setItem('verbo:lastLibrary', e.target.value);
+      renderLibraryPanel(activeVerse());
+    });
+
+    if(selected.linked){
+      els.panelBody.innerHTML=emptyState('⌛','Cargando recurso del pasaje…');
+      try{
+        const resource=await VerboModules.loadLinkedEntries(selected.path,currentBook,currentChapter);
+        renderLinkedResourceEntries(resource, resource.entries, focus, '📚', 'Este capítulo no tiene entradas en este recurso.');
+      }catch(error){ console.error(error); els.panelBody.innerHTML=emptyState('⚠️','No se pudo abrir este recurso.'); }
+      return;
+    }
+
+    if(selected.manifest.entriesFile || selected.manifest.entryFiles){
+      await renderDictionaryLibrary(selected);
+      return;
+    }
+
+    els.panelBody.innerHTML=emptyState('📚','Este recurso está registrado, pero aún no tiene índice compatible.');
   }
 
   async function renderExegesis(focus=null){
