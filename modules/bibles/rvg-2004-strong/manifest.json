@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "type": "bible",
   "id": "rvg-2004-strong",
-  "name": "Reina-Valera Gómez 2004 con Strong (beta)",
-  "abbreviation": "RVG+ β",
+  "name": "Reina-Valera Gómez 2004 + Strong Verbo",
+  "abbreviation": "RVG+ Verbo",
   "language": "es",
   "sourceFormat": "MySword SQLite",
   "sourceFile": "RVG_(R)_2004.bbl.mybible",
   "license": "license-review-required",
-  "usage": "testing-only",
-  "licenseNote": "Exported from Simple Bible Reader (www.churchsw.org)",
-  "moduleVersion": "1.0",
+  "usage": "public-beta",
+  "licenseNote": "Exported from Simple Bible Reader (www.churchsw.org) | Integración y alineación Strong creadas para Verbo.",
+  "moduleVersion": "1.1",
   "versionDate": "2011-12-05 00:00:00",
   "rightToLeft": false,
-  "hasStrong": false,
+  "hasStrong": true,
   "verseCount": 31102,
   "bookCount": 66,
   "books": [
@@ -418,5 +418,6 @@
   "status": "beta",
   "alignmentSource": "Reina-Valera 1960 con Strong",
   "alignmentMethod": "Conservadora por coincidencia textual española; sin inferencias forzadas",
-  "description": "Primera alineación Strong de Verbo. Las palabras no verificadas permanecen sin etiqueta."
+  "description": "Primera alineación Strong de Verbo. Las palabras no verificadas permanecen sin etiqueta.",
+  "alignmentStatus": "Verbo automated alignment; ongoing audited refinement"
 }

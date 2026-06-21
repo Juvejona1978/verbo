@@ -200,20 +200,21 @@ const VerboModules = (() => {
       catch (error) { console.warn(`Biblia omitida: modules/${path}`, error); return null; }
     }))).filter(Boolean);
     if (!bibleResults.length) throw new Error(`No hay Biblias disponibles para ${bookId} ${chapter}`);
-    const commentaryPaths=(registry.commentaries || []);
-    const selectedPaths=commentaryId
-      ? commentaryPaths.filter(path => path.includes(`/` + commentaryId + `/`) || path.endsWith(`/` + commentaryId + `/manifest.json`))
-      : commentaryPaths.slice(0,1);
-    const commentaryResults=(await Promise.all(selectedPaths.map(async path=>{
+
+    // Se cargan TODOS los comentarios que contienen este capítulo. Esto permite
+    // indicar en cada versículo qué módulos tienen contenido, aunque no estén activos.
+    const commentaryResults=(await Promise.all((registry.commentaries || []).map(async path=>{
       try { return await loadCommentary(`modules/${path}`,bookId,chapter); }
       catch (error) { console.warn(`Comentario omitido: modules/${path}`, error); return null; }
     }))).filter(Boolean);
+
     const versions={};
     bibleResults.forEach(({manifest:m})=>versions[m.id]={label:m.abbreviation,full:m.name,year:m.year,hasStrongs:Boolean(m.hasStrongs)});
     const allVerseNumbers=[...new Set(bibleResults.flatMap(b=>Object.keys(b.verses).map(Number)))].sort((a,b)=>a-b);
     const notes={}, notesByVerse=new Map();
     const firstVerse=allVerseNumbers[0] || 1;
     const lastVerse=allVerseNumbers[allVerseNumbers.length-1] || firstVerse;
+
     commentaryResults.forEach(c=>c.entries.forEach(entry=>{
       const ref=entry.reference || {};
       const chStart=Number(ref.chapterStart ?? chapter);
@@ -222,28 +223,42 @@ const VerboModules = (() => {
 
       let start=Number(ref.verseStart);
       let end=Number(ref.verseEnd ?? ref.verseStart);
-
-      // MySword y otros comentarios usan versículo 0 para introducciones de libro/capítulo.
-      // En Verbo se anclan al primer versículo visible para que no queden escondidas.
       if(!Number.isInteger(start) || start <= 0) start = firstVerse;
       if(!Number.isInteger(end) || end <= 0) end = start;
-
-      // Si el comentario cruza capítulos, se ajusta al capítulo actual.
       if(chapter > chStart) start = firstVerse;
       if(chapter < chEnd) end = lastVerse;
-
       start=Math.max(firstVerse, Math.min(start,lastVerse));
       end=Math.max(start, Math.min(end,lastVerse));
 
-      const id=entry.id||`${c.manifest.id}-${bookId}-${chapter}-${start}-${end}`;
-      notes[id]={title:entry.title||`${c.manifest.name}: ${start}${end!==start?'–'+end:''}`,author:entry.author||c.manifest.name,body:entry.content||''};
-      for(let v=start;v<=end;v++){ if(!notesByVerse.has(v)) notesByVerse.set(v,[]); notesByVerse.get(v).push(id); }
+      const commentaryId=c.manifest.id;
+      const rawId=entry.id||`${bookId}-${chapter}-${start}-${end}`;
+      const id=`${commentaryId}::${rawId}`;
+      notes[id]={
+        title:entry.title||`${c.manifest.name}: ${start}${end!==start?'–'+end:''}`,
+        author:entry.author||c.manifest.name,
+        body:entry.content||'',
+        commentaryId,
+        commentaryName:c.manifest.name,
+        commentaryLabel:c.manifest.abbreviation || c.manifest.name
+      };
+      for(let v=start;v<=end;v++){
+        if(!notesByVerse.has(v)) notesByVerse.set(v,new Map());
+        const byModule=notesByVerse.get(v);
+        if(!byModule.has(commentaryId)) byModule.set(commentaryId,[]);
+        byModule.get(commentaryId).push(id);
+      }
     }));
+
     const verses=allVerseNumbers.map(n=>{
       const text={}, segments={};
       bibleResults.forEach(b=>{ const v=b.verses[String(n)]; if(!v)return; text[b.manifest.id]=typeof v==='string'?v:v.text; if(v.segments) segments[b.manifest.id]=v.segments; });
-      const noteIds=notesByVerse.get(n)||[];
-      return {n,text,segments,hasNote:noteIds.length>0,noteIds};
+      const byModule=notesByVerse.get(n) || new Map();
+      const commentaries=[...byModule.entries()].map(([commentaryId,noteIds])=>{
+        const note=notes[noteIds[0]];
+        return { commentaryId, noteIds, label:note?.commentaryLabel || commentaryId, name:note?.commentaryName || commentaryId };
+      });
+      const noteIds=commentaries.flatMap(item=>item.noteIds);
+      return {n,text,segments,hasNote:noteIds.length>0,noteIds,commentaries};
     });
     const first=bibleResults.find(b=>b.manifest.id===registry.defaultBible)||bibleResults[0];
     return {meta:{book:first.bookInfo.name,bookId,chapter,version:first.manifest.id,versionFull:first.manifest.name},versions,verses,notes};

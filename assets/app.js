@@ -163,19 +163,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       const margin=document.createElement('span'); margin.className='marginalia';
       row.append(num,text);
       if(v.hasNote){
-        const commentLink=document.createElement('button');
-        commentLink.type='button';
-        commentLink.className='verse__comment-link';
-        commentLink.innerHTML='<span class="verse__comment-icon" aria-hidden="true">💬</span><span>Com.</span>';
-        commentLink.title='Abrir comentario de este versículo';
-        commentLink.setAttribute('aria-label',`Abrir comentario de ${data.meta.book} ${data.meta.chapter}:${v.n}`);
-        commentLink.addEventListener('click',(e)=>{
-          e.stopPropagation();
-          document.querySelectorAll('.verse--active').forEach(x=>x.classList.remove('verse--active'));
-          row.classList.add('verse--active');
-          openPanel('comentario', v.noteIds?.[0] || null);
+        const commentGroup=document.createElement('span');
+        commentGroup.className='verse__comment-group';
+        (v.commentaries || []).forEach(commentary=>{
+          const commentLink=document.createElement('button');
+          commentLink.type='button';
+          commentLink.className='verse__comment-link';
+          commentLink.innerHTML=`<span class="verse__comment-icon" aria-hidden="true">◆</span><span>${escapeHTML(commentary.label)}</span>`;
+          commentLink.title=`Abrir ${commentary.name} para este versículo`;
+          commentLink.setAttribute('aria-label',`Abrir ${commentary.name} en ${data.meta.book} ${data.meta.chapter}:${v.n}`);
+          commentLink.addEventListener('click',(e)=>{
+            e.stopPropagation();
+            currentCommentary=commentary.commentaryId;
+            localStorage.setItem('verbo:lastCommentary', currentCommentary);
+            document.querySelectorAll('.verse--active').forEach(x=>x.classList.remove('verse--active'));
+            row.classList.add('verse--active');
+            openPanel('comentario', commentary.noteIds?.[0] || null);
+          });
+          commentGroup.appendChild(commentLink);
         });
-        row.appendChild(commentLink);
+        row.appendChild(commentGroup);
       }
       row.appendChild(margin); els.list.appendChild(row);
       text.addEventListener('click',(e)=>{
@@ -203,7 +210,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       row.classList.toggle('verse--selected', selectedVerses.has(verse.n));
       updateSelectionToolbar();
     }
-    const firstNote=verse.noteIds?.[0]||null;
+    const firstNote=verse.commentaries?.find(c=>c.commentaryId===currentCommentary)?.noteIds?.[0]||null;
     // No abrir comentarios automáticamente al tocar un versículo.
     // En móvil el panel invade la lectura; el usuario lo abre manualmente desde el botón lateral.
     if (activeTab === 'comentario') renderPanel('comentario', firstNote);
@@ -253,21 +260,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       if(!focus){
         const selectedVerseNumber = activeVerse();
         const selectedVerse = data?.verses?.find(v => v.n === selectedVerseNumber);
-        focus = selectedVerse?.noteIds?.[0] || null;
+        const moduleInfo=selectedVerse?.commentaries?.find(c=>c.commentaryId===currentCommentary);
+        focus = moduleInfo?.noteIds?.[0] || null;
       }
       els.panelTitle.textContent='Comentario';
       const installed=commentaryCatalog();
       if(installed.length){
         const options=installed.map(c=>`<option value="${c.id}" ${c.id===currentCommentary?'selected':''}>${escapeHTML(c.label)}</option>`).join('');
         els.panelToolbar.innerHTML=`<div class="compare-toolbar"><span class="compare-toolbar__label">Comentario</span><select class="compare-toolbar__select" id="commentarySelect">${options}</select></div>`;
-        document.getElementById('commentarySelect')?.addEventListener('change', async e=>{
+        document.getElementById('commentarySelect')?.addEventListener('change', e=>{
           currentCommentary=e.target.value;
           localStorage.setItem('verbo:lastCommentary', currentCommentary);
-          await loadPassage();
-          renderPanel('comentario', activeVerse());
+          const selectedVerseNumber=activeVerse();
+          const selectedVerse=data?.verses?.find(v=>v.n===selectedVerseNumber);
+          const moduleInfo=selectedVerse?.commentaries?.find(c=>c.commentaryId===currentCommentary);
+          renderPanel('comentario', moduleInfo?.noteIds?.[0] || null);
         });
       }
-      const entries=Object.entries(data.notes);
+      const entries=Object.entries(data.notes).filter(([,note])=>note.commentaryId===currentCommentary);
       els.panelBody.innerHTML=entries.length?entries.map(([id,n])=>`<div class="note-card" data-note-id="${id}"><div class="note-card__ref">${data.meta.book} ${data.meta.chapter}</div><div class="note-card__title">${n.title}</div><div class="note-card__author">${n.author}</div><button class="note-card__copy" type="button" data-copy-note="${id}">Copiar comentario</button><div class="note-card__body">${n.body}</div></div>`).join(''):emptyState('📖','Este capítulo todavía no tiene comentarios cargados.');
       els.panelBody.querySelectorAll('[data-copy-note]').forEach(btn=>btn.addEventListener('click',()=>{ const note=data.notes[btn.dataset.copyNote]; if(note) copyToClipboard(`${note.title}\n${String(note.body).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()}`); }));
       if(focus) scrollCommentToNote(focus);
@@ -300,7 +310,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const n=Number(best?.dataset.verseN);
     if(!n) return;
     const verse=data.verses.find(v=>v.n===n);
-    const noteId=verse?.noteIds?.[0];
+    const noteId=verse?.commentaries?.find(c=>c.commentaryId===currentCommentary)?.noteIds?.[0];
     if(noteId) scrollCommentToNote(noteId);
   }
 

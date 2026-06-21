@@ -1312,3 +1312,29 @@ body[data-theme="rosewood"] {
     margin-top: -2px;
   }
 }
+
+/* Indicadores de comentarios disponibles por módulo */
+.verse__comment-group{
+  display:inline-flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:.28rem;
+  margin-left:.45rem;
+  vertical-align:middle;
+}
+.verse__comment-group .verse__comment-link{
+  min-width:0;
+  padding:.12rem .34rem;
+  border-radius:999px;
+  gap:.2rem;
+  font-size:.66rem;
+  line-height:1.15;
+  white-space:nowrap;
+}
+.verse__comment-group .verse__comment-icon{
+  font-size:.48rem;
+}
+@media (max-width:720px){
+  .verse__comment-group{gap:.2rem;margin-left:.28rem}
+  .verse__comment-group .verse__comment-link{font-size:.6rem;padding:.1rem .26rem}
+}
