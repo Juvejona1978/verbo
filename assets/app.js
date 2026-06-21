@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const bibleCatalog = () => catalog.bibles.map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path }));
   const commentaryCatalog = () => (catalog.commentaries || []).map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest }));
   // Léxico Strong: módulos numéricos (G1234 / H1234) consultados al tocar una etiqueta Strong en el texto.
-  const isStrongLexicon = item => Boolean(item.manifest.strong) || item.manifest.id === 'multilexico';
+  const isStrongLexicon = item => Boolean(item.manifest.strong);
   const dictionaryCatalog = () => (catalog.dictionaries || []).filter(isStrongLexicon).map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest, linked:Boolean(item.manifest.books?.length) }));
   // Biblioteca: todo lo demás — recursos de consulta libre por palabra/tema, sin ancla a versículo
   // (ej. Diccionario Nelson), más Padres Apostólicos y libros adicionales.
@@ -616,9 +616,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function getStrongDictionary(code=null){
     const installed=dictionaryCatalog();
-    if(/^H\d+$/i.test(String(code||''))) return installed.find(d=>d.id==='strong-verbo') || installed.find(d=>d.id==='multilexico') || installed[0] || null;
-    if(/^G\d+$/i.test(String(code||''))) return installed.find(d=>d.id==='multilexico') || installed[0] || null;
-    return installed.find(d=>d.id==='strong-verbo') || installed.find(d=>d.id==='multilexico') || installed[0] || null;
+    return installed.find(d=>d.id==='strong-verbo') || installed[0] || null;
   }
 
   async function renderDictionaryPanel(focus=null){
