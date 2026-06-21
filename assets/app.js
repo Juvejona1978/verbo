@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function openPanel(tab, focus=null) {
-    activeTab=tab; els.side.classList.toggle('side-panel--left', ['biblioteca','padres','evangelio'].includes(tab)); els.side.classList.add('side-panel--open');
+    activeTab=tab; els.side.classList.toggle('side-panel--left', ['biblioteca','padres','evangelio','licencias'].includes(tab)); els.side.classList.add('side-panel--open');
     els.tabs.forEach(b=>b.classList.toggle('tab-rail__btn--active', b.dataset.tab===tab));
     renderPanel(tab,focus);
   }
@@ -291,7 +291,53 @@ document.addEventListener('DOMContentLoaded', async () => {
     if(tab==='notas') renderNotes();
     if(tab==='exegesis') renderExegesis(focus || activeVerse());
     if(tab==='tema') renderTheme();
+    if(tab==='licencias') renderLicensesPanel();
     if(tab==='buscar') renderSearch();
+  }
+
+  function renderLicensesPanel(){
+    els.panelTitle.textContent='Fuentes y licencias';
+    els.panelToolbar.innerHTML='';
+    els.panelBody.innerHTML=`
+      <section class="license-page">
+        <div class="license-page__intro">
+          <div class="license-page__seal" aria-hidden="true">V</div>
+          <div>
+            <h2>Verbo: fuentes y licencias</h2>
+            <p>Verbo reúne textos bíblicos, datos lingüísticos y recursos de estudio respetando sus condiciones de uso. La integración Strong de esta aplicación fue preparada como una capa técnica propia sobre el texto bíblico.</p>
+          </div>
+        </div>
+
+        <article class="license-card">
+          <h3>Reina-Valera Gómez 2004</h3>
+          <p><strong>Texto bíblico:</strong> copyright © 2004, 2010 y 2023, Dr. Humberto Gómez Caballero.</p>
+          <p>Usado como texto bíblico de la versión <strong>RVG-+ V</strong>. El texto se conserva sin modificaciones. Su reproducción con fines de lucro está prohibida.</p>
+          <a href="https://ebible.org/sparvg/copyright.htm" target="_blank" rel="noopener noreferrer">Consultar aviso de copyright</a>
+        </article>
+
+        <article class="license-card">
+          <h3>Etiquetado Strong y fuente de alineación</h3>
+          <p>La capa de correspondencias Strong fue desarrollada para Verbo utilizando como apoyo los datos etiquetados de la <strong>CrossWire KJV</strong>. CrossWire concede una licencia pública general para utilizar ese trabajo.</p>
+          <p>La alineación española, la estructura JSON y la integración visual de <strong>RVG-+ V</strong> son una elaboración técnica de Verbo; no son una edición oficial de la RVG ni de CrossWire.</p>
+          <a href="https://wiki.crosswire.org/CrossWire_KJV" target="_blank" rel="noopener noreferrer">Consultar información de CrossWire KJV</a>
+        </article>
+
+        <article class="license-card">
+          <h3>Diccionarios Strong</h3>
+          <p>Los diccionarios hebreo y griego de James Strong proceden de obras de dominio público. Los módulos base de CrossWire se distribuyen como <strong>Public Domain</strong>.</p>
+          <div class="license-card__links">
+            <a href="https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=StrongsHebrew" target="_blank" rel="noopener noreferrer">Strong hebreo</a>
+            <a href="https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=StrongsGreek" target="_blank" rel="noopener noreferrer">Strong griego</a>
+          </div>
+        </article>
+
+        <article class="license-card license-card--notice">
+          <h3>Aviso de precisión</h3>
+          <p>Los números Strong de <strong>RVG-+ V</strong> constituyen una ayuda de estudio generada mediante alineación lingüística y revisión técnica. No sustituyen el análisis directo de los textos hebreo y griego. Si se detecta una asociación que necesite corrección, puede informarse al equipo de Verbo.</p>
+        </article>
+
+        <p class="license-page__footer">Verbo reconoce y agradece el trabajo de traductores, editores y proyectos bíblicos que hacen posible el estudio responsable de las Escrituras.</p>
+      </section>`;
   }
 
   function scrollCommentToNote(noteId){
