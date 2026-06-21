@@ -1,7 +1,5 @@
-# RVG 2004 + Strong (beta)
+# Reina-Valera Gómez 2004 + Strong Verbo
 
-Generada por `tools/build_rvg_strong.py`. La RVG se conserva literalmente; las etiquetas se almacenan en `segments`.
+Integración completa por versículo desarrollada para Verbo. Conserva literalmente el texto RVG y añade una capa separada de códigos Strong hebreos y griegos.
 
-Cobertura inicial: **89.8%** de las etiquetas Strong presentes en la RV1960+ de referencia.
-
-Los casos no seguros no se etiquetan y aparecen en `alignment-report.json`.
+La alineación usa la KJV Strong de CrossWire como inventario canónico por versículo y anclas españolas para ubicar los códigos.

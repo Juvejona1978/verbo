@@ -157,7 +157,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         verseSegments.forEach((seg,index)=>{
           const word=document.createElement('span'); word.className='word-segment'; word.textContent=(index?' ':'')+(seg.text||'');
           text.appendChild(word);
-          if(seg.strong){ const tag=document.createElement('button'); tag.type='button'; tag.className='strongs-tag'; tag.textContent=seg.strong; tag.dataset.strongCode=seg.strong; tag.title=seg.morph?`Morfología: ${seg.morph}`:'Abrir diccionario'; text.appendChild(tag); }
+          const strongCodes=[...(seg.strong?[seg.strong]:[]),...(Array.isArray(seg.strongs)?seg.strongs:[])].filter((code,pos,all)=>code&&all.indexOf(code)===pos);
+          strongCodes.forEach((code,codeIndex)=>{ const tag=document.createElement('button'); tag.type='button'; tag.className='strongs-tag'; tag.textContent=code; tag.dataset.strongCode=code; const morphs=[...(seg.morph?[seg.morph]:[]),...(Array.isArray(seg.morphs)?seg.morphs:[])]; tag.title=morphs[codeIndex]?`Morfología: ${morphs[codeIndex]}`:'Abrir diccionario'; text.appendChild(tag); });
         });
       } else text.textContent=v.text[currentVersion] || Object.values(v.text)[0] || '';
       const margin=document.createElement('span'); margin.className='marginalia';

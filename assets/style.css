@@ -1338,3 +1338,69 @@ body[data-theme="rosewood"] {
   .verse__comment-group{gap:.2rem;margin-left:.28rem}
   .verse__comment-group .verse__comment-link{font-size:.6rem;padding:.1rem .26rem}
 }
+
+/* Comentarios disponibles: columna marginal compacta, sin ocupar el ancho de lectura */
+.verse__comment-group {
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 5px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 3px;
+  margin: 0;
+  pointer-events: auto;
+}
+.verse__comment-group .verse__comment-link {
+  width: 38px;
+  min-width: 38px;
+  max-width: 38px;
+  min-height: 20px;
+  justify-content: center;
+  gap: 2px;
+  margin: 0;
+  padding: 2px 3px;
+  overflow: hidden;
+  border: 1px solid rgba(122,46,46,.10);
+  border-radius: 7px;
+  background: rgba(250,247,241,.94);
+  box-shadow: 0 1px 4px rgba(62,42,38,.08);
+  font-size: 8px;
+  line-height: 1;
+  text-overflow: ellipsis;
+}
+.verse__comment-group .verse__comment-icon {
+  flex: 0 0 auto;
+  font-size: 6px;
+}
+.verse__comment-group .verse__comment-link span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .verse { flex-wrap: nowrap; }
+  .verse__comment-group {
+    left: auto;
+    right: -2px;
+    top: 4px;
+    gap: 2px;
+  }
+  .verse__comment-group .verse__comment-link {
+    width: 27px;
+    min-width: 27px;
+    max-width: 27px;
+    min-height: 18px;
+    padding: 1px 2px;
+    border-radius: 6px;
+    font-size: 0; /* en móvil queda solo el diamante; el nombre completo sigue en title/aria-label */
+    opacity: .72;
+  }
+  .verse__comment-group .verse__comment-icon { font-size: 9px; }
+  .verse__comment-group .verse__comment-link:hover,
+  .verse__comment-group .verse__comment-link:focus-visible { opacity: 1; }
+}

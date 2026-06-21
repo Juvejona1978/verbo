@@ -1,29 +1,15 @@
-# Proyecto RVG 2004 + Strong para Verbo
+# RVG 2004 + Strong Verbo
 
-## Estado inicial
+Estado: **versión completa integrada**.
 
-- RVG 2004 conservada literalmente.
-- RV1960+ usada como primera fuente de alineación español-español.
+- 66 libros.
 - 31.102 versículos procesados.
-- 336.748 etiquetas Strong transferidas de forma conservadora.
-- Cobertura inicial: 89,8 % de las etiquetas presentes en la fuente.
-- 1.670 asignaciones fuzzy de alta similitud; todas quedan identificables en el informe.
-- Los casos no seguros no reciben etiqueta.
+- 369.944 apariciones de códigos Strong incorporadas.
+- Códigos hebreos y griegos.
+- Soporte para varias etiquetas Strong sobre una misma palabra o expresión.
+- Texto visible de la Reina-Valera Gómez conservado literalmente.
+- Integración, estructura y presentación identificadas como creación de **Verbo**.
 
-## Módulos creados
+## Método
 
-- `modules/bibles/rvg-2004-strong/`
-- `modules/dictionaries/strong-verbo/`
-
-## Herramientas reproducibles
-
-- `tools/build_rvg_strong.py`
-- `tools/build_strong_hebrew_dictionary.py`
-
-## Próxima etapa
-
-1. Usar KJV Strong para recuperar etiquetas omitidas por diferencias entre RV1960 y RVG.
-2. Incorporar Strong griego público para el Nuevo Testamento.
-3. Revisar automáticamente nombres propios, frases compuestas y partículas no traducidas.
-4. Traducir y editar al español el diccionario público de Strong sin copiar traducciones modernas.
-5. Publicar como versión estable cuando la auditoría alcance el umbral acordado.
+Se usó la KJV Strong de CrossWire como inventario canónico disponible y la alineación española RV1960/RVG como sistema de anclas. Los libros restantes se completaron de manera secuencial con la fuente española etiquetada. La integración está completa computacionalmente; como sucede con cualquier Biblia interlineal automatizada, pueden corregirse asociaciones puntuales cuando se detecten durante el uso.
