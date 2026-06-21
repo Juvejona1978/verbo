@@ -1,1 +1,21 @@
-{"schemaVersion":2,"id":"strong-verbo","type":"dictionary","name":"Strong Hebreo de Verbo","abbreviation":"Strong Hebreo","language":"en","strong":true,"description":"Diccionario hebreo original de James Strong (1890), dominio público. Primera etapa legal de Verbo.","license":"Public Domain","source":"James Strong, 1890","entryFiles":{"H":"entries-H.json"},"indexFile":"index.json"}
+{
+  "schemaVersion": 2,
+  "id": "strong-verbo",
+  "type": "dictionary",
+  "name": "Diccionario Strong Verbo",
+  "abbreviation": "Strong V",
+  "language": "es",
+  "strong": true,
+  "description": "Léxico Strong propio de Verbo, construido desde las obras de dominio público de James Strong. Incluye la sección hebrea y está preparado para integrar la sección griega.",
+  "license": "Public Domain (obra fuente); edición digital Verbo",
+  "source": "James Strong, Strong’s Exhaustive Concordance, 1890",
+  "editor": "Verbo",
+  "entryFiles": {
+    "H": "entries-H.json"
+  },
+  "indexFile": "index.json",
+  "coverage": {
+    "hebrew": "H1-H8674",
+    "greek": "pendiente"
+  }
+}
