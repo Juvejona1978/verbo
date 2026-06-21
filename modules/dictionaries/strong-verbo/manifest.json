@@ -11,11 +11,13 @@
   "source": "James Strong, Strong’s Exhaustive Concordance, 1890",
   "editor": "Verbo",
   "entryFiles": {
-    "H": "entries-H.json"
+    "H": "entries-H.json",
+    "G": "entries-G.json"
   },
   "indexFile": "index.json",
   "coverage": {
     "hebrew": "H1-H8674",
-    "greek": "pendiente"
-  }
+    "greek": "G1-G5624 (5523 entradas, lexicón completo)"
+  },
+  "greekSource": "Texto griego, transliteración, derivación y definiciones de James Strong (1890), dominio público, en la edición estructurada de Open Scriptures (CC-BY-SA), el mismo proyecto base usado para la sección hebrea."
 }
