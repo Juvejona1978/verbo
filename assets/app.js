@@ -557,15 +557,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }catch(error){console.error(error);els.panelBody.innerHTML=emptyState('⚠️','No se pudo abrir esta entrada de biblioteca.');}
   }
 
-  function getStrongDictionary(){
+  function getStrongDictionary(code=null){
     const installed=dictionaryCatalog();
-    return installed.find(d=>d.id==='multilexico') || installed[0] || null;
+    if(/^H\d+$/i.test(String(code||''))) return installed.find(d=>d.id==='strong-verbo') || installed.find(d=>d.id==='multilexico') || installed[0] || null;
+    if(/^G\d+$/i.test(String(code||''))) return installed.find(d=>d.id==='multilexico') || installed[0] || null;
+    return installed.find(d=>d.id==='strong-verbo') || installed.find(d=>d.id==='multilexico') || installed[0] || null;
   }
 
   async function renderDictionaryPanel(focus=null){
-    els.panelTitle.textContent='Multiléxico Strong';
     els.panelToolbar.innerHTML='';
     const selected=getStrongDictionary();
+    els.panelTitle.textContent=selected?.full || 'Léxico Strong';
     if(!selected){ els.panelBody.innerHTML=emptyState('📚','No hay diccionario Strong/Multiléxico instalado todavía.'); return; }
     currentDictionary=selected.id;
     localStorage.setItem('verbo:lastDictionary', currentDictionary);
@@ -815,10 +817,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function openDictionary(code){
     openPanel('diccionario');
-    const selected=getStrongDictionary();
+    const selected=getStrongDictionary(code);
     currentDictionary=selected?.id || null;
     if(currentDictionary) localStorage.setItem('verbo:lastDictionary', currentDictionary);
-    els.panelTitle.textContent=`Multiléxico Strong · ${code}`;
+    els.panelTitle.textContent=`${selected?.full || 'Léxico Strong'} · ${code}`;
     els.panelToolbar.innerHTML='';
     els.panelBody.innerHTML=emptyState('⌛','Buscando entrada en Multiléxico…');
     try{
