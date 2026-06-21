@@ -163,27 +163,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else text.textContent=v.text[currentVersion] || Object.values(v.text)[0] || '';
       const margin=document.createElement('span'); margin.className='marginalia';
       row.append(num,text);
-      if(v.hasNote){
-        const commentGroup=document.createElement('span');
-        commentGroup.className='verse__comment-group';
-        (v.commentaries || []).forEach(commentary=>{
-          const commentLink=document.createElement('button');
-          commentLink.type='button';
-          commentLink.className='verse__comment-link';
-          commentLink.innerHTML=`<span class="verse__comment-icon" aria-hidden="true">◆</span><span>${escapeHTML(commentary.label)}</span>`;
-          commentLink.title=`Abrir ${commentary.name} para este versículo`;
-          commentLink.setAttribute('aria-label',`Abrir ${commentary.name} en ${data.meta.book} ${data.meta.chapter}:${v.n}`);
-          commentLink.addEventListener('click',(e)=>{
-            e.stopPropagation();
-            currentCommentary=commentary.commentaryId;
-            localStorage.setItem('verbo:lastCommentary', currentCommentary);
-            document.querySelectorAll('.verse--active').forEach(x=>x.classList.remove('verse--active'));
-            row.classList.add('verse--active');
-            openPanel('comentario', commentary.noteIds?.[0] || null);
-          });
-          commentGroup.appendChild(commentLink);
+      if(v.hasNote && (v.commentaries||[]).length){
+        const indicator=document.createElement('button');
+        indicator.type='button';
+        indicator.className='verse__comment-indicator';
+        const count=v.commentaries.length;
+        indicator.innerHTML=`<span class="verse__comment-indicator__icon" aria-hidden="true">◆</span><span class="verse__comment-indicator__count">${count}</span>`;
+        const plural=count===1?'comentario disponible':'comentarios disponibles';
+        indicator.title=`${count} ${plural} para este versículo`;
+        indicator.setAttribute('aria-label',`Ver ${count} ${plural} en ${data.meta.book} ${data.meta.chapter}:${v.n}`);
+        indicator.addEventListener('click',(e)=>{
+          e.stopPropagation();
+          document.querySelectorAll('.verse--active').forEach(x=>x.classList.remove('verse--active'));
+          row.classList.add('verse--active');
+          openPanel('comentario', null, v.commentaries);
         });
-        row.appendChild(commentGroup);
+        row.appendChild(indicator);
       }
       row.appendChild(margin); els.list.appendChild(row);
       text.addEventListener('click',(e)=>{
@@ -246,19 +241,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     copyToClipboard(lines.join('\n'));
   }
 
-  function openPanel(tab, focus=null) {
+  function openPanel(tab, focus=null, verseCommentaries=null) {
     activeTab=tab; els.side.classList.toggle('side-panel--left', ['biblioteca','padres','evangelio','licencias'].includes(tab)); els.side.classList.add('side-panel--open');
     els.tabs.forEach(b=>b.classList.toggle('tab-rail__btn--active', b.dataset.tab===tab));
-    renderPanel(tab,focus);
+    renderPanel(tab,focus,verseCommentaries);
   }
   function closePanel(){ activeTab=null; els.side.classList.remove('side-panel--open','side-panel--left'); els.tabs.forEach(b=>b.classList.remove('tab-rail__btn--active')); }
 
-  function renderPanel(tab, focus=null) {
+  function renderPanel(tab, focus=null, verseCommentaries=null) {
     els.panelToolbar.innerHTML='';
     if(tab==='comentario'){
       // Si el usuario seleccionó un versículo con el panel cerrado, al abrir Comentario
       // usamos ese versículo activo para ubicar el comentario correspondiente.
-      if(!focus){
+      if(!focus && !verseCommentaries){
         const selectedVerseNumber = activeVerse();
         const selectedVerse = data?.verses?.find(v => v.n === selectedVerseNumber);
         const moduleInfo=selectedVerse?.commentaries?.find(c=>c.commentaryId===currentCommentary);
@@ -277,6 +272,16 @@ document.addEventListener('DOMContentLoaded', async () => {
           const moduleInfo=selectedVerse?.commentaries?.find(c=>c.commentaryId===currentCommentary);
           renderPanel('comentario', moduleInfo?.noteIds?.[0] || null);
         });
+      }
+      if(verseCommentaries && verseCommentaries.length){
+        const verseNumber=activeVerse();
+        els.panelBody.innerHTML=`<div class="note-card__title" style="margin-bottom:8px;">Disponible en ${escapeHTML(data.meta.book)} ${data.meta.chapter}:${verseNumber}</div><div class="verse-commentary-picker">${verseCommentaries.map(c=>`<button type="button" class="verse-commentary-picker__item" data-pick-commentary="${escapeHTML(c.commentaryId)}" data-pick-note="${escapeHTML(c.noteIds?.[0]||'')}">${escapeHTML(c.name)}</button>`).join('')}</div>`;
+        els.panelBody.querySelectorAll('[data-pick-commentary]').forEach(btn=>btn.addEventListener('click',()=>{
+          currentCommentary=btn.dataset.pickCommentary;
+          localStorage.setItem('verbo:lastCommentary', currentCommentary);
+          renderPanel('comentario', btn.dataset.pickNote || null);
+        }));
+        return;
       }
       const entries=Object.entries(data.notes).filter(([,note])=>note.commentaryId===currentCommentary);
       els.panelBody.innerHTML=entries.length?entries.map(([id,n])=>`<div class="note-card" data-note-id="${id}"><div class="note-card__ref">${data.meta.book} ${data.meta.chapter}</div><div class="note-card__title">${n.title}</div><div class="note-card__author">${n.author}</div><button class="note-card__copy" type="button" data-copy-note="${id}">Copiar comentario</button><div class="note-card__body">${n.body}</div></div>`).join(''):emptyState('📖','Este capítulo todavía no tiene comentarios cargados.');

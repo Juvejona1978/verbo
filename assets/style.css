@@ -1268,141 +1268,78 @@ body[data-theme="rosewood"] {
   .side-panel--left.side-panel--open .side-panel__inner { width: 100vw; }
 }
 
-/* Indicador discreto al final del versículo cuando existe comentario */
-.verse__comment-link {
-  align-self: baseline;
-  flex-shrink: 0;
+/* Indicador único de comentarios disponibles por versículo: ícono + contador */
+.verse__comment-indicator {
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 4px;
+  z-index: 4;
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  margin: 0 1px 0 2px;
-  padding: 2px 5px;
+  padding: 2px 7px;
   border: 0;
   border-radius: 999px;
-  background: rgba(122, 46, 46, 0.07);
+  background: rgba(122, 46, 46, 0.08);
   color: var(--wine-soft);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  line-height: 1.25;
   cursor: pointer;
   white-space: nowrap;
+  line-height: 1;
 }
-
-.verse__comment-link:hover,
-.verse__comment-link:focus-visible {
-  background: rgba(122, 46, 46, 0.14);
+.verse__comment-indicator:hover,
+.verse__comment-indicator:focus-visible {
+  background: rgba(122, 46, 46, 0.16);
   color: var(--wine);
   outline: none;
 }
-
-.verse__comment-icon {
+.verse__comment-indicator__icon {
   font-size: 11px;
   line-height: 1;
 }
-
-@media (max-width: 760px) {
-  .verse {
-    flex-wrap: wrap;
-  }
-  .verse__text {
-    min-width: 0;
-  }
-  .verse__comment-link {
-    margin-left: 38px;
-    margin-top: -2px;
-  }
-}
-
-/* Indicadores de comentarios disponibles por módulo */
-.verse__comment-group{
-  display:inline-flex;
-  flex-wrap:wrap;
-  align-items:center;
-  gap:.28rem;
-  margin-left:.45rem;
-  vertical-align:middle;
-}
-.verse__comment-group .verse__comment-link{
-  min-width:0;
-  padding:.12rem .34rem;
-  border-radius:999px;
-  gap:.2rem;
-  font-size:.66rem;
-  line-height:1.15;
-  white-space:nowrap;
-}
-.verse__comment-group .verse__comment-icon{
-  font-size:.48rem;
-}
-@media (max-width:720px){
-  .verse__comment-group{gap:.2rem;margin-left:.28rem}
-  .verse__comment-group .verse__comment-link{font-size:.6rem;padding:.1rem .26rem}
-}
-
-/* Comentarios disponibles: columna marginal compacta, sin ocupar el ancho de lectura */
-.verse__comment-group {
-  position: absolute;
-  left: calc(100% + 6px);
-  top: 5px;
-  z-index: 4;
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  align-items: stretch;
-  gap: 3px;
-  margin: 0;
-  pointer-events: auto;
-}
-.verse__comment-group .verse__comment-link {
-  width: 38px;
-  min-width: 38px;
-  max-width: 38px;
-  min-height: 20px;
-  justify-content: center;
-  gap: 2px;
-  margin: 0;
-  padding: 2px 3px;
-  overflow: hidden;
-  border: 1px solid rgba(122,46,46,.10);
-  border-radius: 7px;
-  background: rgba(250,247,241,.94);
-  box-shadow: 0 1px 4px rgba(62,42,38,.08);
-  font-size: 8px;
+.verse__comment-indicator__count {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
   line-height: 1;
-  text-overflow: ellipsis;
-}
-.verse__comment-group .verse__comment-icon {
-  flex: 0 0 auto;
-  font-size: 6px;
-}
-.verse__comment-group .verse__comment-link span:last-child {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 @media (max-width: 760px) {
   .verse { flex-wrap: nowrap; }
-  .verse__comment-group {
+  .verse__comment-indicator {
     left: auto;
     right: -2px;
     top: 4px;
-    gap: 2px;
+    padding: 2px 6px;
   }
-  .verse__comment-group .verse__comment-link {
-    width: 27px;
-    min-width: 27px;
-    max-width: 27px;
-    min-height: 18px;
-    padding: 1px 2px;
-    border-radius: 6px;
-    font-size: 0; /* en móvil queda solo el diamante; el nombre completo sigue en title/aria-label */
-    opacity: .72;
-  }
-  .verse__comment-group .verse__comment-icon { font-size: 9px; }
-  .verse__comment-group .verse__comment-link:hover,
-  .verse__comment-group .verse__comment-link:focus-visible { opacity: 1; }
+  .verse__comment-indicator__icon { font-size: 10px; }
+  .verse__comment-indicator__count { font-size: 10px; }
+}
+
+/* Lista de módulos disponibles en el versículo, mostrada al abrir el panel desde el indicador */
+.verse-commentary-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 24px;
+}
+.verse-commentary-picker__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 15px;
+  cursor: pointer;
+}
+.verse-commentary-picker__item:hover,
+.verse-commentary-picker__item:focus-visible {
+  background: rgba(122, 46, 46, 0.06);
+  border-color: var(--wine-soft);
+  outline: none;
 }
 
 
