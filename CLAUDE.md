@@ -80,7 +80,8 @@ Objetivo: validar el contenido, no el producto completo. Login/cuentas NO forman
 - Juan tiene comodidad técnica media: puede seguir instrucciones paso a paso, pero no domina frameworks ni terminología técnica a profundidad. Explica los comandos en términos simples antes o al pedir su aprobación.
 - Juan revisa y aprueba cada paso — no asumas luz verde para cambios que toquen el repositorio real, `registry.json`, o cualquier `git commit`/`git push`. Los cambios que solo exploran, leen, o trabajan en archivos temporales (`/tmp/`) son de bajo riesgo y pueden proponerse con confianza.
 - Antes de borrar o desactivar cualquier módulo de Biblia/comentario/diccionario, presenta el plan completo (qué se borra, qué se mantiene, por qué) y espera confirmación explícita de Juan.
-- El control de calidad teológico de contenido generado usa un meta-prompt propio de Juan ("revisión teológica brutal") — si se genera contenido teológico, debe pasar por ese proceso. Preguntar a Juan por el meta-prompt si no está disponible en el repositorio.
+- El control de calidad teológico de contenido generado usa un meta-prompt propio de Juan ("revisión teológica brutal") — si se genera contenido teológico NUEVO (con IA, sin fuente real), debe pasar por ese proceso. Preguntar a Juan por el meta-prompt si no está disponible en el repositorio.
+- **Excepción confirmada por Juan (2026-06-23):** la traducción de Matthew Henry NO necesita pasar por la revisión teológica brutal — "en el caso de Matthew Henry, pasa directo". Razón: es traducción fiel de una obra histórica ya publicada y de dominio público, no contenido teológico generado de cero; el riesgo que la revisión brutal busca mitigar (una IA inventando o tergiversando doctrina) no aplica aquí. Esta excepción es específica a Matthew Henry — no asumir que se extiende a otros comentaristas sin confirmar con Juan.
 
 ## Estado actual del trabajo (actualizar conforme se avance)
 

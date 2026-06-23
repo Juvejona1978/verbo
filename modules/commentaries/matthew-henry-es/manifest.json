@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "id": "matthew-henry-es",
+  "type": "commentary",
+  "name": "Comentario de Matthew Henry",
+  "abbreviation": "Matthew Henry",
+  "language": "es",
+  "author": "Matthew Henry",
+  "year": 1710,
+  "description": "Traducción propia al español, en curso, del Matthew Henry's Complete Commentary on the Whole Bible (obra de dominio público, edición digital biblesnet.com 2010). Comentario completo y sin abreviar, no la versión concisa. Por el tamaño de la obra (66 libros, ~1262 capítulos), se está traduciendo de forma incremental, libro por libro, capítulo por capítulo.",
+  "license": "Dominio público (obra original de 1710; edición fuente en inglés de distribución libre, biblesnet.com 2010). Traducción al español: propia de Verbo.",
+  "sourceFormat": "HTML (biblesnet.com), traducción propia",
+  "books": [
+    {
+      "id": "GEN",
+      "name": "Génesis",
+      "number": 1,
+      "file": "books/GEN.json"
+    }
+  ]
+}
