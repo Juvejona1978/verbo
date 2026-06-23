@@ -68,11 +68,15 @@ Objetivo: validar el contenido, no el producto completo. Login/cuentas NO forman
 - **API de IA (uso offline, generación de contenido):** Claude Sonnet 4.6.
 - El sitio HOY no tiene backend, ni base de datos, ni autenticación, ni APIs externas conectadas — es 100% estático. Confirmado por exploración del repositorio.
 
+## Catálogo de fuentes disponibles (Archivos Verbo.zip)
+
+En la raíz del repo (sin comitear — es material de trabajo, no contenido final) está `Archivos Verbo.zip` (340 MB), con material en inglés ya descargado por Juan, organizado por Fuentes Oficiales de Recursos (CCEL, CrossWire/SWORD, Open Scriptures, STEPBible, GitHub — todo dominio público o licencia abierta, verificar caso por caso antes de usar comercialmente). Contiene, entre otros: comentarios completos de **Matthew Henry (MHC.zip), Barnes, Clarke, JFB, Wesley, Keil & Delitzsch (KD.zip), Scofield, TSK, Pulpit/PA**; diccionario **Strong hebreo y griego completos** (StrongsHebrew.zip, StrongsGreek.zip, strongs-master, HebrewLexicon-master); además ASV en inglés y datos lingüísticos (STEPBible-Data-master, morphological-lexicon-master). También dos documentos de contexto (`Fuentes Oficiales de Recursos.docx`, `Verbo_Resumen_Ejecutivo.docx`) — el resumen ejecutivo es del 22 de junio, un día ANTES del cambio de arquitectura (IA en vivo → generación previa offline); su plan de backend/Supabase/IA-por-clic quedó superado por la decisión ya registrada arriba, pero sus secciones de modelo de negocio (planes $5/$10/$20, proyección de costos de API) y meta-prompt siguen vigentes.
+
 ## Pendientes abiertos (sin resolver aún, no bloquean empezar a trabajar)
 
-- ¿Cuál es el segundo comentario? (ver candidatos arriba).
+- ¿Cuál es el segundo comentario? Candidatos con texto completo ya disponible en `Archivos Verbo.zip`: Barnes, Clarke, JFB, Wesley, Keil & Delitzsch, Scofield, Pulpit Commentary, Matthew Poole, Cambridge Bible (más Ireneo, ya integrado como módulo patrístico). Falta decidir con Juan.
 - ¿El panel de Exégesis se oculta del menú o queda visible como "próximamente"?
-- El meta-prompt de "revisión teológica brutal" no existe como archivo todavía — formalizarlo y guardarlo en el repo (ej. `docs/meta-prompt-revision-teologica.md`) es necesario antes de poder aplicarlo de forma sistemática a cada pieza de contenido generada.
+- El meta-prompt de "revisión teológica brutal" no existe como archivo formal todavía, pero sus criterios ya están documentados en `Verbo_Resumen_Ejecutivo.docx`: fidelidad bíblica, precisión exegética, equilibrio doctrinal, centralidad de Cristo, valor pastoral, riesgo de mala interpretación, calidad comunicativa; salida esperada: veredicto + frases a corregir + calificación 1-10. Ya validado con éxito en una prueba real (Romanos 8:28-30, resultado 8.5-10). Flujo previsto: Claude genera y se autorevisa con este meta-prompt en el mismo paso; el ChatGPT Plus de Juan (calibrado en su teología) se usa solo para auditoría puntual de muestra, sin conexión técnica entre ambos (copiar/pegar manual). Falta convertir esto en un archivo formal del repo (ej. `docs/meta-prompt-revision-teologica.md`) con el texto exacto del prompt.
 - Respuesta del Dr. Humberto Gómez Caballero sobre licencia comercial de RVG (sigue sin respuesta). Si llega aprobación: recuperar del historial de git (`git show 055faf6:modules/bibles/rvg-2004/...` o ruta equivalente) antes de reintegrar a `registry.json` — no estaba aprobada para uso comercial, solo existía como contenido de prueba.
 
 ## Cómo trabajar con Juan
