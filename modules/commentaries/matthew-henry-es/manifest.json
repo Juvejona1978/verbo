@@ -16,6 +16,12 @@
       "name": "Génesis",
       "number": 1,
       "file": "books/GEN.json"
+    },
+    {
+      "id": "EXO",
+      "name": "Éxodo",
+      "number": 2,
+      "file": "books/EXO.json"
     }
   ]
 }
