@@ -58,6 +58,12 @@
       "name": "Rut",
       "number": 8,
       "file": "books/RUT.json"
+    },
+    {
+      "id": "1SA",
+      "name": "1 Samuel",
+      "number": 9,
+      "file": "books/1SA.json"
     }
   ]
 }
