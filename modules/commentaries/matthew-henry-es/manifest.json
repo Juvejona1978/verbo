@@ -22,6 +22,12 @@
       "name": "Éxodo",
       "number": 2,
       "file": "books/EXO.json"
+    },
+    {
+      "id": "LEV",
+      "name": "Levítico",
+      "number": 3,
+      "file": "books/LEV.json"
     }
   ]
 }
