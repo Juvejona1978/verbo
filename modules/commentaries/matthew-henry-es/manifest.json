@@ -124,6 +124,24 @@
       "name": "Salmos",
       "number": 19,
       "file": "books/PSA.json"
+    },
+    {
+      "id": "PRO",
+      "name": "Proverbios",
+      "number": 20,
+      "file": "books/PRO.json"
+    },
+    {
+      "id": "ECC",
+      "name": "Eclesiastés",
+      "number": 21,
+      "file": "books/ECC.json"
+    },
+    {
+      "id": "SNG",
+      "name": "Cantares",
+      "number": 22,
+      "file": "books/SNG.json"
     }
   ]
 }
