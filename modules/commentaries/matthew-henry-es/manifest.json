@@ -82,6 +82,18 @@
       "name": "2 Reyes",
       "number": 12,
       "file": "books/2KI.json"
+    },
+    {
+      "id": "1CH",
+      "name": "1 Crónicas",
+      "number": 13,
+      "file": "books/1CH.json"
+    },
+    {
+      "id": "2CH",
+      "name": "2 Crónicas",
+      "number": 14,
+      "file": "books/2CH.json"
     }
   ]
 }
