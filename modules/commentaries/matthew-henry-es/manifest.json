@@ -148,6 +148,30 @@
       "name": "Isaías",
       "number": 23,
       "file": "books/ISA.json"
+    },
+    {
+      "id": "JER",
+      "name": "Jeremías",
+      "number": 24,
+      "file": "books/JER.json"
+    },
+    {
+      "id": "LAM",
+      "name": "Lamentaciones",
+      "number": 25,
+      "file": "books/LAM.json"
+    },
+    {
+      "id": "EZK",
+      "name": "Ezequiel",
+      "number": 26,
+      "file": "books/EZK.json"
+    },
+    {
+      "id": "DAN",
+      "name": "Daniel",
+      "number": 27,
+      "file": "books/DAN.json"
     }
   ]
 }
