@@ -352,6 +352,60 @@
       "name": "Filemón",
       "number": 57,
       "file": "books/PHM.json"
+    },
+    {
+      "id": "HEB",
+      "name": "Hebreos",
+      "number": 58,
+      "file": "books/HEB.json"
+    },
+    {
+      "id": "JAS",
+      "name": "Santiago",
+      "number": 59,
+      "file": "books/JAS.json"
+    },
+    {
+      "id": "1PE",
+      "name": "1 Pedro",
+      "number": 60,
+      "file": "books/1PE.json"
+    },
+    {
+      "id": "2PE",
+      "name": "2 Pedro",
+      "number": 61,
+      "file": "books/2PE.json"
+    },
+    {
+      "id": "1JN",
+      "name": "1 Juan",
+      "number": 62,
+      "file": "books/1JN.json"
+    },
+    {
+      "id": "2JN",
+      "name": "2 Juan",
+      "number": 63,
+      "file": "books/2JN.json"
+    },
+    {
+      "id": "3JN",
+      "name": "3 Juan",
+      "number": 64,
+      "file": "books/3JN.json"
+    },
+    {
+      "id": "JUD",
+      "name": "Judas",
+      "number": 65,
+      "file": "books/JUD.json"
+    },
+    {
+      "id": "REV",
+      "name": "Apocalipsis",
+      "number": 66,
+      "file": "books/REV.json"
     }
   ]
 }
