@@ -70,6 +70,12 @@
       "name": "2 Samuel",
       "number": 10,
       "file": "books/2SA.json"
+    },
+    {
+      "id": "1KI",
+      "name": "1 Reyes",
+      "number": 11,
+      "file": "books/1KI.json"
     }
   ]
 }
