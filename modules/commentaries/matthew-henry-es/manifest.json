@@ -172,6 +172,78 @@
       "name": "Daniel",
       "number": 27,
       "file": "books/DAN.json"
+    },
+    {
+      "id": "HOS",
+      "name": "Oseas",
+      "number": 28,
+      "file": "books/HOS.json"
+    },
+    {
+      "id": "JOL",
+      "name": "Joel",
+      "number": 29,
+      "file": "books/JOL.json"
+    },
+    {
+      "id": "AMO",
+      "name": "Amós",
+      "number": 30,
+      "file": "books/AMO.json"
+    },
+    {
+      "id": "OBA",
+      "name": "Abdías",
+      "number": 31,
+      "file": "books/OBA.json"
+    },
+    {
+      "id": "JON",
+      "name": "Jonás",
+      "number": 32,
+      "file": "books/JON.json"
+    },
+    {
+      "id": "MIC",
+      "name": "Miqueas",
+      "number": 33,
+      "file": "books/MIC.json"
+    },
+    {
+      "id": "NAH",
+      "name": "Nahúm",
+      "number": 34,
+      "file": "books/NAH.json"
+    },
+    {
+      "id": "HAB",
+      "name": "Habacuc",
+      "number": 35,
+      "file": "books/HAB.json"
+    },
+    {
+      "id": "ZEP",
+      "name": "Sofonías",
+      "number": 36,
+      "file": "books/ZEP.json"
+    },
+    {
+      "id": "HAG",
+      "name": "Hageo",
+      "number": 37,
+      "file": "books/HAG.json"
+    },
+    {
+      "id": "ZEC",
+      "name": "Zacarías",
+      "number": 38,
+      "file": "books/ZEC.json"
+    },
+    {
+      "id": "MAL",
+      "name": "Malaquías",
+      "number": 39,
+      "file": "books/MAL.json"
     }
   ]
 }
