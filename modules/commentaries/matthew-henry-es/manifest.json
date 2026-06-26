@@ -40,6 +40,12 @@
       "name": "Deuteronomio",
       "number": 5,
       "file": "books/DEU.json"
+    },
+    {
+      "id": "JOS",
+      "name": "Josué",
+      "number": 6,
+      "file": "books/JOS.json"
     }
   ]
 }
