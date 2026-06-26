@@ -112,6 +112,12 @@
       "name": "Ester",
       "number": 17,
       "file": "books/EST.json"
+    },
+    {
+      "id": "JOB",
+      "name": "Job",
+      "number": 18,
+      "file": "books/JOB.json"
     }
   ]
 }
