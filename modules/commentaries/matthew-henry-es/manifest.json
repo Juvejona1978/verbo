@@ -274,6 +274,84 @@
       "name": "Hechos",
       "number": 44,
       "file": "books/ACT.json"
+    },
+    {
+      "id": "ROM",
+      "name": "Romanos",
+      "number": 45,
+      "file": "books/ROM.json"
+    },
+    {
+      "id": "1CO",
+      "name": "1 Corintios",
+      "number": 46,
+      "file": "books/1CO.json"
+    },
+    {
+      "id": "2CO",
+      "name": "2 Corintios",
+      "number": 47,
+      "file": "books/2CO.json"
+    },
+    {
+      "id": "GAL",
+      "name": "Gálatas",
+      "number": 48,
+      "file": "books/GAL.json"
+    },
+    {
+      "id": "EPH",
+      "name": "Efesios",
+      "number": 49,
+      "file": "books/EPH.json"
+    },
+    {
+      "id": "PHP",
+      "name": "Filipenses",
+      "number": 50,
+      "file": "books/PHP.json"
+    },
+    {
+      "id": "COL",
+      "name": "Colosenses",
+      "number": 51,
+      "file": "books/COL.json"
+    },
+    {
+      "id": "1TH",
+      "name": "1 Tesalonicenses",
+      "number": 52,
+      "file": "books/1TH.json"
+    },
+    {
+      "id": "2TH",
+      "name": "2 Tesalonicenses",
+      "number": 53,
+      "file": "books/2TH.json"
+    },
+    {
+      "id": "1TI",
+      "name": "1 Timoteo",
+      "number": 54,
+      "file": "books/1TI.json"
+    },
+    {
+      "id": "2TI",
+      "name": "2 Timoteo",
+      "number": 55,
+      "file": "books/2TI.json"
+    },
+    {
+      "id": "TIT",
+      "name": "Tito",
+      "number": 56,
+      "file": "books/TIT.json"
+    },
+    {
+      "id": "PHM",
+      "name": "Filemón",
+      "number": 57,
+      "file": "books/PHM.json"
     }
   ]
 }
