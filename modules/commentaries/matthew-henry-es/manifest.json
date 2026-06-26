@@ -94,6 +94,24 @@
       "name": "2 Crónicas",
       "number": 14,
       "file": "books/2CH.json"
+    },
+    {
+      "id": "EZR",
+      "name": "Esdras",
+      "number": 15,
+      "file": "books/EZR.json"
+    },
+    {
+      "id": "NEH",
+      "name": "Nehemías",
+      "number": 16,
+      "file": "books/NEH.json"
+    },
+    {
+      "id": "EST",
+      "name": "Ester",
+      "number": 17,
+      "file": "books/EST.json"
     }
   ]
 }
