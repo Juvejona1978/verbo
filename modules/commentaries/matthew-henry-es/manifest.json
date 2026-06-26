@@ -52,6 +52,12 @@
       "name": "Jueces",
       "number": 7,
       "file": "books/JDG.json"
+    },
+    {
+      "id": "RUT",
+      "name": "Rut",
+      "number": 8,
+      "file": "books/RUT.json"
     }
   ]
 }
