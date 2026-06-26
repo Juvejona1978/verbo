@@ -118,6 +118,12 @@
       "name": "Job",
       "number": 18,
       "file": "books/JOB.json"
+    },
+    {
+      "id": "PSA",
+      "name": "Salmos",
+      "number": 19,
+      "file": "books/PSA.json"
     }
   ]
 }
