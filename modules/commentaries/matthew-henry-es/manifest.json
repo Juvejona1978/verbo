@@ -76,6 +76,12 @@
       "name": "1 Reyes",
       "number": 11,
       "file": "books/1KI.json"
+    },
+    {
+      "id": "2KI",
+      "name": "2 Reyes",
+      "number": 12,
+      "file": "books/2KI.json"
     }
   ]
 }
