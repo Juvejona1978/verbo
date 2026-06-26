@@ -28,6 +28,12 @@
       "name": "Levítico",
       "number": 3,
       "file": "books/LEV.json"
+    },
+    {
+      "id": "NUM",
+      "name": "Números",
+      "number": 4,
+      "file": "books/NUM.json"
     }
   ]
 }
