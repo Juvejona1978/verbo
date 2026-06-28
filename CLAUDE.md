@@ -95,4 +95,27 @@ En la raíz del repo (sin comitear — es material de trabajo, no contenido fina
 - Limpieza ampliada por instrucción explícita de Juan (2026-06-23, commit `1df794d`): se eliminaron TODAS las demás traducciones bíblicas con copyright editorial (RVG 2004, RVG 2004+Strong, NVI 1984, NTV, DHH, Biblia en Lenguaje Sencillo, Jünemann, LBLA, Biblia del Oso, Nácar-Colunga) y el diccionario strong-verbo. **El sitio hoy solo tiene una Biblia: RVA 1909 (dominio público), que es ahora la `defaultBible`.** Se mantuvieron únicamente como excepción: `ireneo-contra-herejias` (comentario + patrística, traducción propia de Juan, licencia CC BY-NC-ND no comercial) y `gospel/evangelio-uf` (Evangelio cronológico). `modules/dictionaries/` y `modules/library/` quedaron sin ningún módulo. Verificado en vivo tras cada borrado (selector, navegación, paneles) sin errores de consola. Ambos commits publicados en GitHub.
 - Importante para cualquier sesión futura: si se vuelve a hablar de "las Biblias del sitio" o "la Biblia RVG", recordar que YA NO EXISTEN en el repo — solo queda RVA 1909. Antes de reintroducir cualquier traducción con copyright (RVG, NVI, NTV, DHH, LBLA, etc.) a producción, se necesita resolver la licencia correspondiente (ver caso RVG/Dr. Gómez abajo) — no asumir que estaban aprobadas porque existieron antes de esta limpieza.
 - Correo enviado por Juan al Dr. Humberto Gómez Caballero solicitando permiso de uso comercial de RVG — esperando respuesta. (Nota: el módulo RVG ya no está en el repo; si llega el permiso, habría que reconstruirlo o recuperarlo del historial de git antes de reintegrarlo.)
-- Traducción de Matthew Henry en curso (módulo `modules/commentaries/matthew-henry-es/`, registrado en `registry.json`): Génesis 1-11 completos (87 entradas en `books/GEN.json`), cubriendo toda la historia primigenia (creación, caída, Caín y Abel, genealogías antediluvianas, diluvio, pacto del arco iris, Babel) hasta el umbral de la historia de Abram. Fuente: `matthew_henry.zip` (no comiteado, en raíz del repo). Cada capítulo se tradujo, comiteó y publicó por separado (commits `977cff2` a `059b630`). Traducción exenta de la revisión teológica brutal por excepción ya documentada arriba. Continuando capítulo por capítulo (siguiente: Génesis 12, inicio de la historia de Abram) por instrucción de Juan de avanzar de forma autónoma ("haz lo que quieras para avanzar").
+- **Matthew Henry — Estado al 2026-06-28 (commit `83bb693`):** Los 66 libros del canon están traducidos al español en `modules/commentaries/matthew-henry-es/books/`. La fase siguiente es la **sincronización verso a verso** (como GEN/EXO), que divide cada capítulo en secciones de versos con `verseStart`/`verseEnd` precisos en lugar del marcador genérico `v=1-99`. Fuente: `matthew_henry.zip` (no comiteado, en raíz del repo). Traducción exenta de revisión teológica brutal (excepción ya documentada arriba).
+
+  **Sincronización verso a verso COMPLETADA (formato como GEN):**
+  - GEN: 290 entradas — modelo de referencia del formato correcto
+  - EXO: 161 entradas
+  - Epístolas paulinas: GAL (23), EPH (23), 1TH (24), 2TH (14), 1TI (24), 2CO (52)
+  - Epístolas generales: JAS (19), 1PE (28), 2PE (18), JUD (6), 2JN (7), 3JN (6), PHM (4), TIT (12)
+  - Profetas menores: JON (14), MIC (25), OBA (5), ZEC (49)
+
+  **Una entrada por capítulo (v=1-99) — sin verse-sync aún:**
+  - Evangelios y Hechos: MAT (29 entradas/28 caps), MRK (17/16), LUK (25/24), ACT (29/28)
+  - JHN (22 entradas, caps 1-21 + intro)
+
+  **Pocas entradas / agrupados por secciones — sin verse-sync:**
+  - Pentateuco histórico: LEV (28), NUM (32), DEU (23), JOS (14), JDG (9), RUT (4)
+  - Historia: 1SA (9), 2SA (8), 1KI (9), 2KI (7), 1CH (4), 2CH (4), EZR (3), NEH (4), EST (3)
+  - Poéticos: JOB (8), PSA (19), PRO (4), ECC (3), SNG (1)
+  - Profetas mayores: ISA (8), JER (4), LAM (1), EZK (4), DAN (3)
+  - Profetas menores sin verse-sync: HOS (2), JOL (1), AMO (1), NAH (1), HAB (1), ZEP (1), HAG (1), MAL (1)
+  - Epístolas NT sin verse-sync: 1CO (3), HEB (3), ROM (4), REV (4), 1JN (1)
+
+  **Siguiente prioridad:** verse-sync de MAT, MRK, LUK, JHN, ACT (Evangelios y Hechos), luego ROM, 1CO, HEB, REV, 1JN, y después los libros del AT con pocas entradas.
+
+  **Fix app.js comiteado (83bb693):** el panel de comentario carga directamente la nota del comentario activo al navegar a un verso, eliminando el selector intermedio que existía antes.
