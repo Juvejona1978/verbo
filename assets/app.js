@@ -273,15 +273,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           renderPanel('comentario', moduleInfo?.noteIds?.[0] || null);
         });
       }
-      if(verseCommentaries && verseCommentaries.length){
-        const verseNumber=activeVerse();
-        els.panelBody.innerHTML=`<div class="note-card__title" style="margin-bottom:8px;">Disponible en ${escapeHTML(data.meta.book)} ${data.meta.chapter}:${verseNumber}</div><div class="verse-commentary-picker">${verseCommentaries.map(c=>`<button type="button" class="verse-commentary-picker__item" data-pick-commentary="${escapeHTML(c.commentaryId)}" data-pick-note="${escapeHTML(c.noteIds?.[0]||'')}">${escapeHTML(c.name)}</button>`).join('')}</div>`;
-        els.panelBody.querySelectorAll('[data-pick-commentary]').forEach(btn=>btn.addEventListener('click',()=>{
-          currentCommentary=btn.dataset.pickCommentary;
-          localStorage.setItem('verbo:lastCommentary', currentCommentary);
-          renderPanel('comentario', btn.dataset.pickNote || null);
-        }));
-        return;
+      if(verseCommentaries && verseCommentaries.length && !focus){
+        const curNote=verseCommentaries.find(c=>c.commentaryId===currentCommentary);
+        focus=curNote?.noteIds?.[0]||null;
       }
       const entries=Object.entries(data.notes).filter(([,note])=>note.commentaryId===currentCommentary);
       els.panelBody.innerHTML=entries.length?entries.map(([id,n])=>`<div class="note-card" data-note-id="${id}"><div class="note-card__ref">${data.meta.book} ${data.meta.chapter}</div><div class="note-card__title">${n.title}</div><div class="note-card__author">${n.author}</div><button class="note-card__copy" type="button" data-copy-note="${id}">Copiar comentario</button><div class="note-card__body">${n.body}</div></div>`).join(''):emptyState('📖','Este capítulo todavía no tiene comentarios cargados.');
