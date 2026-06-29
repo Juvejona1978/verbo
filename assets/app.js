@@ -162,21 +162,31 @@ document.addEventListener('DOMContentLoaded', async () => {
       `<li class="version-picker__option${v.id===currentVersion?' version-picker__option--active':''}" data-id="${escapeHTML(v.id)}">${escapeHTML(v.label)}<span class="version-picker__option-full">${escapeHTML(v.full)}</span></li>`
     ).join('');
     // En móvil el header tiene overflow:hidden — posicionar con fixed via JS para no ser recortado
-    if (window.innerWidth <= 720) {
+    if (window.innerWidth <= 760) {
       const rect = els.versionInput.getBoundingClientRect();
-      els.versionDropdown.classList.add('version-picker__dropdown--mobile-fixed');
-      els.versionDropdown.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
+      Object.assign(els.versionDropdown.style, {
+        position: 'fixed',
+        top: (rect.bottom + 4) + 'px',
+        bottom: '',
+        left: '8px',
+        right: '8px',
+        minWidth: 'auto',
+        maxHeight: '50vh',
+        zIndex: '2100'
+      });
+    } else {
+      els.versionDropdown.style.cssText = '';
     }
     els.versionDropdown.hidden = !list.length;
     els.versionDropdown.querySelectorAll('li').forEach(li => {
       li.addEventListener('mousedown', e => { e.preventDefault(); selectBibleVersion(li.dataset.id); });
+      li.addEventListener('touchend', e => { e.preventDefault(); selectBibleVersion(li.dataset.id); });
     });
   }
 
   function closeVersionDropdown() {
     els.versionDropdown.hidden = true;
-    els.versionDropdown.classList.remove('version-picker__dropdown--mobile-fixed');
-    els.versionDropdown.style.bottom = '';
+    els.versionDropdown.style.cssText = '';
     const cur = bibleCatalog().find(v => v.id === currentVersion);
     els.versionInput.value = cur?.label || currentVersion || '';
     els.versionInput.readOnly = true;
