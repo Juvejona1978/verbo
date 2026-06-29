@@ -291,21 +291,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     activeTab=tab;
     const isSheet=window.innerWidth<=760 && SHEET_TABS.includes(tab);
     els.side.classList.toggle('side-panel--left', ['biblioteca','padres','evangelio','licencias'].includes(tab));
-    els.side.classList.add('side-panel--open');
-    els.side.dataset.sheet = isSheet ? '1' : '';
-    if(!isSheet) delete els.side.dataset.sheet;
-    els.side.style.transform='';
+    if(isSheet){
+      els.side.dataset.sheet='1';  // CSS aplica translateY(105%) inmediatamente
+      els.side.offsetHeight;       // fuerza reflow para que el estado inicial esté fijo
+    } else {
+      delete els.side.dataset.sheet;
+      els.side.style.transform='';
+    }
+    els.side.classList.add('side-panel--open'); // CSS transiciona a translateY(0) para sheets
     els.backdrop?.classList.toggle('sheet-backdrop--visible', isSheet);
     els.tabs.forEach(b=>b.classList.toggle('tab-rail__btn--active', b.dataset.tab===tab));
     renderPanel(tab,focus,verseCommentaries,panelWasClosed);
   }
   function closePanel(){
+    const wasSheet=!!els.side.dataset.sheet;
     activeTab=null;
-    els.side.classList.remove('side-panel--open','side-panel--left');
-    delete els.side.dataset.sheet;
-    els.side.style.transform='';
+    els.side.classList.remove('side-panel--open','side-panel--left'); // CSS: translateY(105%) para sheets
     els.backdrop?.classList.remove('sheet-backdrop--visible');
     els.tabs.forEach(b=>b.classList.remove('tab-rail__btn--active'));
+    if(wasSheet){
+      // Esperar la animación de bajada antes de limpiar data-sheet
+      setTimeout(()=>{ delete els.side.dataset.sheet; els.side.style.transform=''; }, 310);
+    } else {
+      delete els.side.dataset.sheet;
+      els.side.style.transform='';
+    }
   }
 
   // ── Drag-to-dismiss para bottom sheet ────────────────────────────────────────
@@ -1096,6 +1106,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   els.book.addEventListener('change',async()=>{currentBook=els.book.value;currentChapter=1;await refreshChapters();await loadPassage();});
   els.chapter.addEventListener('change',async()=>{currentChapter=Number(els.chapter.value);updateNavButtons();await loadPassage();});
   els.prev.addEventListener('click',()=>moveChapter(-1)); els.next.addEventListener('click',()=>moveChapter(1));
+
+  // ── Swipe horizontal para cambiar capítulo en móvil ─────────────────────────
+  let swipeStartX=null, swipeStartY=null;
+  els.list.addEventListener('touchstart',e=>{
+    swipeStartX=e.touches[0].clientX; swipeStartY=e.touches[0].clientY;
+  },{passive:true});
+  els.list.addEventListener('touchend',e=>{
+    if(swipeStartX===null) return;
+    const dx=e.changedTouches[0].clientX-swipeStartX;
+    const dy=Math.abs(e.changedTouches[0].clientY-swipeStartY);
+    swipeStartX=null; swipeStartY=null;
+    // Solo activar si gesto principalmente horizontal (dx>60, dy<dx/2) y sin panel abierto
+    if(Math.abs(dx)<60||dy>Math.abs(dx)/2||activeTab) return;
+    if(window.innerWidth>760) return;
+    moveChapter(dx<0?1:-1);
+  });
+  // ─────────────────────────────────────────────────────────────────────────────
 
   els.versionInput.addEventListener('click',()=>{ els.versionInput.readOnly=false; els.versionInput.select(); openVersionDropdown(); });
   els.versionInput.addEventListener('input',openVersionDropdown);
