@@ -310,8 +310,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     els.backdrop?.classList.remove('sheet-backdrop--visible');
     els.tabs.forEach(b=>b.classList.remove('tab-rail__btn--active'));
     if(wasSheet){
-      // Esperar la animación de bajada antes de limpiar data-sheet
-      setTimeout(()=>{ delete els.side.dataset.sheet; els.side.style.transform=''; }, 310);
+      // Esperar la animación de bajada (transform) antes de limpiar data-sheet.
+      // Se deshabilita la transición de width antes de eliminar el atributo para
+      // evitar que el colapso de width sea visible al volver al estado base.
+      setTimeout(()=>{
+        els.side.style.transition='none';
+        delete els.side.dataset.sheet;
+        els.side.style.transform='';
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{ els.side.style.transition=''; }));
+      }, 310);
     } else {
       delete els.side.dataset.sheet;
       els.side.style.transform='';

@@ -1241,6 +1241,7 @@ body[data-theme="rosewood"] {
   border-left: 0;
   border-right: 1px solid var(--rule);
   order: -1;
+  transition: none; /* El panel izquierdo aparece al instante, sin empujar el contenido */
 }
 
 .library-rail { order: -2; }
@@ -1356,6 +1357,9 @@ body[data-theme="rosewood"] {
   }
 
   .mobile-tool-btn[data-tab="evangelio"].mobile-tool-btn--armed .mobile-tool-label { max-width: 204px; }
+
+  /* Paneles no-sheet en móvil: sin transición de ancho, aparecen al instante */
+  .side-panel:not([data-sheet]) { transition: none; }
 
   .side-panel--open,
   .side-panel--left.side-panel--open {
