@@ -10,10 +10,7 @@
     "commentaries/matthew-henry-en/manifest.json",
     "commentaries/jfb/manifest.json",
     "commentaries/kd/manifest.json",
-    "commentaries/clarke/manifest.json",
-    "commentaries/wesley/manifest.json",
-    "commentaries/scofield/manifest.json",
-    "commentaries/tsk/manifest.json"
+    "commentaries/scofield/manifest.json"
   ],
   "dictionaries": [],
   "exegesis": [],
