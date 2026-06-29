@@ -21,7 +21,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     selectionCount: document.getElementById('selectionCount'),
     copySelectionText: document.getElementById('copySelectionText'),
     copySelectionRefs: document.getElementById('copySelectionRefs'),
-    clearSelection: document.getElementById('clearSelection')
+    clearSelection: document.getElementById('clearSelection'),
+    backdrop: document.getElementById('sheetBackdrop')
   };
 
   let catalog, data, activeTab = null, currentVersion = null, compareVersion = null;
@@ -282,13 +283,52 @@ document.addEventListener('DOMContentLoaded', async () => {
     copyToClipboard(lines.join('\n'));
   }
 
+  const SHEET_TABS = ['comentario','comparar','diccionario'];
+  function isMobileSheet(){ return window.innerWidth<=760 && SHEET_TABS.includes(activeTab); }
+
   function openPanel(tab, focus=null, verseCommentaries=null) {
     const panelWasClosed=!els.side.classList.contains('side-panel--open');
-    activeTab=tab; els.side.classList.toggle('side-panel--left', ['biblioteca','padres','evangelio','licencias'].includes(tab)); els.side.classList.add('side-panel--open');
+    activeTab=tab;
+    const isSheet=window.innerWidth<=760 && SHEET_TABS.includes(tab);
+    els.side.classList.toggle('side-panel--left', ['biblioteca','padres','evangelio','licencias'].includes(tab));
+    els.side.classList.add('side-panel--open');
+    els.side.dataset.sheet = isSheet ? '1' : '';
+    if(!isSheet) delete els.side.dataset.sheet;
+    els.side.style.transform='';
+    els.backdrop?.classList.toggle('sheet-backdrop--visible', isSheet);
     els.tabs.forEach(b=>b.classList.toggle('tab-rail__btn--active', b.dataset.tab===tab));
     renderPanel(tab,focus,verseCommentaries,panelWasClosed);
   }
-  function closePanel(){ activeTab=null; els.side.classList.remove('side-panel--open','side-panel--left'); els.tabs.forEach(b=>b.classList.remove('tab-rail__btn--active')); }
+  function closePanel(){
+    activeTab=null;
+    els.side.classList.remove('side-panel--open','side-panel--left');
+    delete els.side.dataset.sheet;
+    els.side.style.transform='';
+    els.backdrop?.classList.remove('sheet-backdrop--visible');
+    els.tabs.forEach(b=>b.classList.remove('tab-rail__btn--active'));
+  }
+
+  // ── Drag-to-dismiss para bottom sheet ────────────────────────────────────────
+  let sheetDragY=null;
+  els.side.addEventListener('touchstart',e=>{
+    if(!isMobileSheet()) return;
+    if(els.panelBody.scrollTop>2) return;
+    sheetDragY=e.touches[0].clientY;
+  },{passive:true});
+  els.side.addEventListener('touchmove',e=>{
+    if(!isMobileSheet()||sheetDragY===null) return;
+    if(els.panelBody.scrollTop>2){ sheetDragY=null; return; }
+    const dy=e.touches[0].clientY-sheetDragY;
+    if(dy>0){ els.side.style.transform=`translateY(${dy}px)`; e.preventDefault(); }
+  },{passive:false});
+  els.side.addEventListener('touchend',e=>{
+    if(sheetDragY===null) return;
+    const dy=e.changedTouches[0].clientY-sheetDragY;
+    sheetDragY=null;
+    if(dy>110) closePanel(); else els.side.style.transform='';
+  });
+  els.backdrop?.addEventListener('click',()=>closePanel());
+  // ─────────────────────────────────────────────────────────────────────────────
 
   function renderPanel(tab, focus=null, verseCommentaries=null, delayScroll=false) {
     els.panelToolbar.innerHTML='';
