@@ -180,6 +180,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (compareVersion === currentVersion) compareVersion = Object.keys(data.versions).find(x => x !== currentVersion) || currentVersion;
     closeVersionDropdown();
     populateVersions();
+    // Si la versión seleccionada no tiene el libro actual, navegar a su primer libro
+    const bibleEntry = catalog.bibles.find(b => b.manifest.id === id);
+    if (bibleEntry?.manifest.books?.length) {
+      const hasCurrentBook = bibleEntry.manifest.books.some(b => b.id === currentBook);
+      if (!hasCurrentBook) {
+        currentBook = bibleEntry.manifest.books[0].id;
+        currentChapter = 1;
+        els.book.value = currentBook;
+        refreshChapters().then(() => loadPassage());
+        return;
+      }
+    }
     renderChapter(v);
     if (activeTab === 'comparar') renderCompare(v);
   }

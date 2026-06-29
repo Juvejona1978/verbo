@@ -186,6 +186,9 @@ body {
 }
 
 .version-picker__input {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
   font-family: var(--font-body);
   font-size: 13.5px;
   font-weight: 600;
