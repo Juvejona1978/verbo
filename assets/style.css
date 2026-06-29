@@ -155,32 +155,6 @@ body {
   gap: 6px;
 }
 
-.version-lang-tabs {
-  display: flex;
-  gap: 2px;
-}
-
-.version-lang-tab {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  padding: 3px 6px;
-  border: 1.5px solid var(--rule-strong);
-  border-radius: 4px;
-  background: transparent;
-  color: var(--sepia);
-  cursor: pointer;
-  transition: background .12s, color .12s, border-color .12s;
-  line-height: 1;
-}
-
-.version-lang-tab--active {
-  background: var(--wine-soft);
-  border-color: var(--wine-soft);
-  color: #fff;
-}
-
 .version-picker__field {
   position: relative;
 }

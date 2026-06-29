@@ -34,7 +34,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   let searchState = null;
   let currentCommentary = localStorage.getItem('verbo:lastCommentary') || null;
   let commentaryLangPref = localStorage.getItem('verbo:commentaryLang') || 'es';
-  let bibleLangFilter = localStorage.getItem('verbo:bibleLang') || 'es';
   let currentDictionary = localStorage.getItem('verbo:lastDictionary') || null;
   let currentExegesis = localStorage.getItem('verbo:lastExegesis') || null;
   let gospelData=null;
@@ -145,13 +144,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   function populateVersions() {
     const all = bibleCatalog();
     const cur = all.find(v => v.id === currentVersion);
-    if (cur && cur.lang !== bibleLangFilter) {
-      bibleLangFilter = cur.lang;
-      localStorage.setItem('verbo:bibleLang', bibleLangFilter);
-    }
-    document.querySelectorAll('.version-lang-tab').forEach(btn => {
-      btn.classList.toggle('version-lang-tab--active', btn.dataset.lang === bibleLangFilter);
-    });
     els.versionInput.value = cur?.label || currentVersion || '';
     // Select nativo en móvil
     if (els.nativeVersionSelect) {
@@ -1177,15 +1169,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if(e.key==='Enter'){ const first=els.versionDropdown.querySelector('li'); if(first) selectBibleVersion(first.dataset.id); }
   });
 
-  document.getElementById('versionLangTabs')?.addEventListener('click',e=>{
-    const btn=e.target.closest('.version-lang-tab'); if(!btn) return;
-    bibleLangFilter=btn.dataset.lang;
-    localStorage.setItem('verbo:bibleLang',bibleLangFilter);
-    document.querySelectorAll('.version-lang-tab').forEach(b=>b.classList.toggle('version-lang-tab--active',b.dataset.lang===bibleLangFilter));
-    const filtered=bibleCatalog().filter(v=>v.lang===bibleLangFilter);
-    if(!filtered.some(v=>v.id===currentVersion) && filtered.length) selectBibleVersion(filtered[0].id);
-    else if(!els.versionDropdown.hidden) openVersionDropdown();
-  });
   let armedMobileTool = null;
   let armedMobileTimer = null;
 
