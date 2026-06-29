@@ -1169,7 +1169,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   // ─────────────────────────────────────────────────────────────────────────────
 
-  els.versionInput.addEventListener('click',()=>{ els.versionInput.readOnly=false; els.versionInput.select(); openVersionDropdown(); });
+  els.versionInput.addEventListener('click',()=>{ els.versionInput.readOnly=false; els.versionInput.value=''; openVersionDropdown(); });
   els.versionInput.addEventListener('input',openVersionDropdown);
   els.versionInput.addEventListener('blur',()=>setTimeout(closeVersionDropdown,150));
   els.versionInput.addEventListener('keydown',e=>{
