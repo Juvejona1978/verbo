@@ -444,8 +444,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const card = noteId ? els.panelBody.querySelector(`[data-note-id="${noteId}"]`) : null;
     if(!card) return;
     suppressCommentSync = true;
-    // Use scrollTop directly — more stable than scrollIntoView when DOM changes after scroll
-    els.panelBody.scrollTop = card.offsetTop - 8;
+    const panelRect = els.panelBody.getBoundingClientRect();
+    const cardRect  = card.getBoundingClientRect();
+    els.panelBody.scrollTop += (cardRect.top - panelRect.top) - 8;
     setTimeout(()=>{ suppressCommentSync=false; }, 400);
   }
 
