@@ -242,13 +242,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function openPanel(tab, focus=null, verseCommentaries=null) {
+    const panelWasClosed=!els.side.classList.contains('side-panel--open');
     activeTab=tab; els.side.classList.toggle('side-panel--left', ['biblioteca','padres','evangelio','licencias'].includes(tab)); els.side.classList.add('side-panel--open');
     els.tabs.forEach(b=>b.classList.toggle('tab-rail__btn--active', b.dataset.tab===tab));
-    renderPanel(tab,focus,verseCommentaries);
+    renderPanel(tab,focus,verseCommentaries,panelWasClosed);
   }
   function closePanel(){ activeTab=null; els.side.classList.remove('side-panel--open','side-panel--left'); els.tabs.forEach(b=>b.classList.remove('tab-rail__btn--active')); }
 
-  function renderPanel(tab, focus=null, verseCommentaries=null) {
+  function renderPanel(tab, focus=null, verseCommentaries=null, delayScroll=false) {
     els.panelToolbar.innerHTML='';
     if(tab==='comentario'){
       // Si el usuario seleccionó un versículo con el panel cerrado, al abrir Comentario
@@ -280,7 +281,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const entries=Object.entries(data.notes).filter(([,note])=>note.commentaryId===currentCommentary);
       els.panelBody.innerHTML=entries.length?entries.map(([id,n])=>`<div class="note-card" data-note-id="${id}"><div class="note-card__ref">${data.meta.book} ${data.meta.chapter}</div><div class="note-card__title">${n.title}</div><div class="note-card__author">${n.author}</div><button class="note-card__copy" type="button" data-copy-note="${id}">Copiar comentario</button><div class="note-card__body">${n.body}</div></div>`).join(''):emptyState('📖','Este capítulo todavía no tiene comentarios cargados.');
       els.panelBody.querySelectorAll('[data-copy-note]').forEach(btn=>btn.addEventListener('click',()=>{ const note=data.notes[btn.dataset.copyNote]; if(note) copyToClipboard(`${note.title}\n${String(note.body).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()}`); }));
-      if(focus) scrollCommentToNote(focus);
+      if(focus){ if(delayScroll) setTimeout(()=>scrollCommentToNote(focus),320); else scrollCommentToNote(focus); }
     }
     if(tab==='comparar'){ els.panelTitle.textContent='Comparar versiones'; renderCompare(focus||activeVerse()); }
     if(tab==='diccionario') renderDictionaryPanel(focus || activeVerse());
