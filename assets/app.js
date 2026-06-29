@@ -403,15 +403,40 @@ document.addEventListener('DOMContentLoaded', async () => {
   function tcacheSet(key,val){ try{ localStorage.setItem(T_PREFIX+key, JSON.stringify(val)); }catch{} }
   function htmlToPlainText(html){ return html.replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/\s+/g,' ').trim(); }
 
+  function splitTextIntoChunks(text, maxLen=4500){
+    const chunks=[];
+    while(text.length>maxLen){
+      let idx=text.lastIndexOf('. ',maxLen);
+      if(idx<maxLen/2) idx=text.lastIndexOf(' ',maxLen);
+      if(idx<0) idx=maxLen;
+      chunks.push(text.slice(0,idx+1).trim());
+      text=text.slice(idx+1).trim();
+    }
+    if(text) chunks.push(text);
+    return chunks;
+  }
+
   async function googleTranslate(text){
-    // Google Translate public endpoint — same used by the Google Translate widget
-    const url=`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=es&dt=t&q=${encodeURIComponent(text)}`;
-    const resp=await fetch(url);
-    if(!resp.ok) return null;
-    const data=await resp.json();
-    // Response: [ [ [translated, original], ... ], ... ]
-    if(!Array.isArray(data?.[0])) return null;
-    return data[0].map(p=>p?.[0]||'').join('');
+    async function fetchTranslate(chunk){
+      try{
+        const url=`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=es&dt=t&q=${encodeURIComponent(chunk)}`;
+        const resp=await fetch(url);
+        if(!resp.ok) return null;
+        const json=await resp.json();
+        if(!Array.isArray(json?.[0])) return null;
+        return json[0].map(p=>p?.[0]||'').join('');
+      }catch{ return null; }
+    }
+    if(text.length<=4500) return fetchTranslate(text);
+    // Long text: translate in chunks sequentially to avoid URL limits
+    const chunks=splitTextIntoChunks(text);
+    const parts=[];
+    for(const chunk of chunks){
+      const r=await fetchTranslate(chunk);
+      if(r===null) return null;
+      parts.push(r);
+    }
+    return parts.join(' ');
   }
 
   async function translateEntry(noteId, htmlContent){
