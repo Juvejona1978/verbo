@@ -268,7 +268,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if(installed.length){
         const options=installed.map(c=>`<option value="${c.id}" ${c.id===currentCommentary?'selected':''}>${escapeHTML(c.label)}</option>`).join('');
         const langBtn=isEnglishCommentary
-          ?`<button class="commentary-lang-btn ${commentaryLangPref==='en'?'commentary-lang-btn--active':''}" id="commentaryLangToggle" title="${commentaryLangPref==='en'?'Ver en español':'Ver en inglés'}">${commentaryLangPref==='en'?'EN':'ES'}</button>`
+          ?`<button class="commentary-lang-btn ${commentaryLangPref==='en'?'commentary-lang-btn--active':''}" id="commentaryLangToggle" title="${commentaryLangPref==='en'?'Ver en español':'Ver en inglés'}">${commentaryLangPref==='en'?'ES ↩':'EN ↗'}</button>`
           :'';
         els.panelToolbar.innerHTML=`<div class="compare-toolbar"><span class="compare-toolbar__label">Comentario</span><select class="compare-toolbar__select" id="commentarySelect">${options}</select>${langBtn}</div>`;
         document.getElementById('commentarySelect')?.addEventListener('change', e=>{
@@ -298,7 +298,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }).join(''):emptyState('📖','Este capítulo todavía no tiene comentarios cargados.');
       els.panelBody.querySelectorAll('[data-copy-note]').forEach(btn=>btn.addEventListener('click',()=>{ const note=data.notes[btn.dataset.copyNote]; if(note) copyToClipboard(`${note.title}\n${String(note.body).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()}`); }));
       if(focus){ if(delayScroll) setTimeout(()=>scrollCommentToNote(focus),320); else scrollCommentToNote(focus); }
-      if(isEnglishCommentary && commentaryLangPref==='es') setTimeout(()=>applyCommentaryTranslation(), 100);
+      if(isEnglishCommentary && commentaryLangPref==='es') setTimeout(()=>applyCommentaryTranslation(focus), 150);
     }
     if(tab==='comparar'){ els.panelTitle.textContent='Comparar versiones'; renderCompare(focus||activeVerse()); }
     if(tab==='diccionario') renderDictionaryPanel(focus || activeVerse());
@@ -363,29 +363,62 @@ document.addEventListener('DOMContentLoaded', async () => {
   function tcacheSet(key,val){ try{ localStorage.setItem(T_PREFIX+key, JSON.stringify(val)); }catch{} }
   function htmlToPlainText(html){ return html.replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/\s+/g,' ').trim(); }
 
+  async function myMemoryTranslate(text){
+    // MyMemory free tier: max ~500 chars/request. Split into chunks and rejoin.
+    const CHUNK = 480;
+    const words = text.split(' ');
+    const chunks = [];
+    let cur = '';
+    for(const w of words){
+      if((cur+' '+w).length > CHUNK && cur){ chunks.push(cur.trim()); cur = w; }
+      else cur += (cur?' ':'')+w;
+    }
+    if(cur) chunks.push(cur.trim());
+    const parts = [];
+    for(const chunk of chunks){
+      if(!chunk) continue;
+      const url=`https://api.mymemory.translated.net/get?q=${encodeURIComponent(chunk)}&langpair=en|es&de=juanjosevenegas78@gmail.com`;
+      const resp=await fetch(url);
+      if(!resp.ok) return null;
+      const json=await resp.json();
+      if(json.responseStatus!==200 && json.responseStatus!=='200') return null;
+      parts.push(json.responseData?.translatedText||chunk);
+    }
+    return parts.join(' ');
+  }
+
   async function translateEntry(noteId, htmlContent){
     const cached=tcacheGet(noteId); if(cached) return cached;
     const text=htmlToPlainText(htmlContent);
     if(!text || text.length<10) return htmlContent;
     try{
-      const chunk=text.slice(0,4800);
-      const resp=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(chunk)}&langpair=en|es`);
-      if(!resp.ok) return htmlContent;
-      const json=await resp.json();
-      if(json.responseStatus!==200) return htmlContent;
-      const translated=json.responseData?.translatedText||text;
-      const result='<p>'+translated+'</p>';
+      const translated=await myMemoryTranslate(text);
+      if(!translated) return htmlContent;
+      // Rebuild as paragraphs — split on sentences ending with period + space
+      const sentences=translated.split(/(?<=\.)\s+/);
+      const paras=[];
+      let para='';
+      for(const s of sentences){
+        para+=(para?' ':'')+s;
+        if(para.length>300){ paras.push(para); para=''; }
+      }
+      if(para) paras.push(para);
+      const result=paras.map(p=>`<p>${p}</p>`).join('');
       tcacheSet(noteId, result);
       return result;
     }catch{ return htmlContent; }
   }
 
-  async function applyCommentaryTranslation(){
+  async function applyCommentaryTranslation(focusNoteId=null){
     if(commentaryLangPref==='en') return;
     const manifest=catalog?.commentaries?.find(c=>c.manifest.id===currentCommentary)?.manifest;
     if(manifest?.language!=='en') return;
     const cards=[...els.panelBody.querySelectorAll('.note-card[data-note-id]')];
-    for(const card of cards){
+    // Translate focused card first for immediate feedback
+    const sorted = focusNoteId
+      ? [...cards.filter(c=>c.dataset.noteId===focusNoteId), ...cards.filter(c=>c.dataset.noteId!==focusNoteId)]
+      : cards;
+    for(const card of sorted){
       const noteId=card.dataset.noteId;
       const bodyEl=card.querySelector('.note-card__body');
       if(!bodyEl||bodyEl.dataset.translated==='1') continue;
@@ -394,8 +427,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       bodyEl.dataset.translated='pending';
       const translated=await translateEntry(noteId, note.body);
       if(bodyEl.dataset.translated==='pending'){
+        const prevTop = noteId===focusNoteId ? card.getBoundingClientRect().top : null;
         bodyEl.innerHTML=translated;
         bodyEl.dataset.translated='1';
+        // Re-anchor scroll to keep focused card in place
+        if(prevTop!==null){
+          const newTop=card.getBoundingClientRect().top;
+          els.panelBody.scrollTop += (newTop - prevTop);
+        }
       }
     }
   }
@@ -405,8 +444,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const card = noteId ? els.panelBody.querySelector(`[data-note-id="${noteId}"]`) : null;
     if(!card) return;
     suppressCommentSync = true;
-    card.scrollIntoView({block:'start'});
-    setTimeout(()=>{ suppressCommentSync=false; }, 250);
+    // Use scrollTop directly — more stable than scrollIntoView when DOM changes after scroll
+    els.panelBody.scrollTop = card.offsetTop - 8;
+    setTimeout(()=>{ suppressCommentSync=false; }, 400);
   }
 
   function syncCommentToReading(){
