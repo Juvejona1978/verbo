@@ -10,6 +10,10 @@
   "license": "Edición propia sobre base de dominio público (SpaRV1909)",
   "hasStrongs": false,
   "books": [
-    { "id": "TIT", "name": "Tito", "number": 56, "file": "books/TIT.json" }
+    { "id": "TIT", "name": "Tito",    "number": 56, "file": "books/TIT.json" },
+    { "id": "PHM", "name": "Filemón", "number": 57, "file": "books/PHM.json" },
+    { "id": "2JN", "name": "2 Juan",  "number": 63, "file": "books/2JN.json" },
+    { "id": "3JN", "name": "3 Juan",  "number": 64, "file": "books/3JN.json" },
+    { "id": "JUD", "name": "Judas",   "number": 65, "file": "books/JUD.json" }
   ]
 }
