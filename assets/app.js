@@ -363,28 +363,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   function tcacheSet(key,val){ try{ localStorage.setItem(T_PREFIX+key, JSON.stringify(val)); }catch{} }
   function htmlToPlainText(html){ return html.replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/\s+/g,' ').trim(); }
 
-  async function myMemoryTranslate(text){
-    // MyMemory free tier: max ~500 chars/request. Split into chunks and rejoin.
-    const CHUNK = 480;
-    const words = text.split(' ');
-    const chunks = [];
-    let cur = '';
-    for(const w of words){
-      if((cur+' '+w).length > CHUNK && cur){ chunks.push(cur.trim()); cur = w; }
-      else cur += (cur?' ':'')+w;
-    }
-    if(cur) chunks.push(cur.trim());
-    const parts = [];
-    for(const chunk of chunks){
-      if(!chunk) continue;
-      const url=`https://api.mymemory.translated.net/get?q=${encodeURIComponent(chunk)}&langpair=en|es&de=juanjosevenegas78@gmail.com`;
-      const resp=await fetch(url);
-      if(!resp.ok) return null;
-      const json=await resp.json();
-      if(json.responseStatus!==200 && json.responseStatus!=='200') return null;
-      parts.push(json.responseData?.translatedText||chunk);
-    }
-    return parts.join(' ');
+  async function googleTranslate(text){
+    // Google Translate public endpoint — same used by the Google Translate widget
+    const url=`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=es&dt=t&q=${encodeURIComponent(text)}`;
+    const resp=await fetch(url);
+    if(!resp.ok) return null;
+    const data=await resp.json();
+    // Response: [ [ [translated, original], ... ], ... ]
+    if(!Array.isArray(data?.[0])) return null;
+    return data[0].map(p=>p?.[0]||'').join('');
   }
 
   async function translateEntry(noteId, htmlContent){
@@ -392,7 +379,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const text=htmlToPlainText(htmlContent);
     if(!text || text.length<10) return htmlContent;
     try{
-      const translated=await myMemoryTranslate(text);
+      const translated=await googleTranslate(text);
       if(!translated) return htmlContent;
       // Rebuild as paragraphs — split on sentences ending with period + space
       const sentences=translated.split(/(?<=\.)\s+/);
