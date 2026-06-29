@@ -818,21 +818,21 @@ button:focus-visible,
     flex-wrap: nowrap;
     gap: 8px;
     overflow-x: auto;
-    overflow-y: visible; /* visible para no recortar el dropdown del picker */
+    overflow-y: hidden;
     padding-bottom: 4px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
   }
 
-  .version-picker__dropdown {
-    position: fixed;
-    top: auto;
-    left: 8px;
-    right: 8px;
-    bottom: calc(var(--mobile-dock-height, 76px) + env(safe-area-inset-bottom) + 8px);
-    min-width: auto;
-    max-height: 45vh;
-    z-index: 2100;
+  /* El dropdown se posiciona vía JS con position:fixed para evitar el clipping del overflow:hidden */
+  .version-picker__dropdown--mobile-fixed {
+    position: fixed !important;
+    top: auto !important;
+    left: 8px !important;
+    right: 8px !important;
+    min-width: auto !important;
+    max-height: 45vh !important;
+    z-index: 2100 !important;
   }
 
   .app-header__nav > * {

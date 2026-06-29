@@ -161,6 +161,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     els.versionDropdown.innerHTML = list.map(v =>
       `<li class="version-picker__option${v.id===currentVersion?' version-picker__option--active':''}" data-id="${escapeHTML(v.id)}">${escapeHTML(v.label)}<span class="version-picker__option-full">${escapeHTML(v.full)}</span></li>`
     ).join('');
+    // En móvil el header tiene overflow:hidden — posicionar con fixed via JS para no ser recortado
+    if (window.innerWidth <= 720) {
+      const rect = els.versionInput.getBoundingClientRect();
+      els.versionDropdown.classList.add('version-picker__dropdown--mobile-fixed');
+      els.versionDropdown.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
+    }
     els.versionDropdown.hidden = !list.length;
     els.versionDropdown.querySelectorAll('li').forEach(li => {
       li.addEventListener('mousedown', e => { e.preventDefault(); selectBibleVersion(li.dataset.id); });
@@ -169,6 +175,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function closeVersionDropdown() {
     els.versionDropdown.hidden = true;
+    els.versionDropdown.classList.remove('version-picker__dropdown--mobile-fixed');
+    els.versionDropdown.style.bottom = '';
     const cur = bibleCatalog().find(v => v.id === currentVersion);
     els.versionInput.value = cur?.label || currentVersion || '';
     els.versionInput.readOnly = true;
