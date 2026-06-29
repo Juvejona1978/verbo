@@ -54,6 +54,13 @@ const VerboModules = (() => {
     const manifest = await getJSON(manifestPath);
     const bookInfo = manifest.books.find(book => book.id === bookId);
     if (!bookInfo) return { manifest, entries:[] };
+    if (manifest.chapterSplit) {
+      const base = manifestPath.slice(0, manifestPath.lastIndexOf('/') + 1);
+      try {
+        const bookData = await getJSON(`${base}books/${bookId}/${chapter}.json`);
+        return { manifest, entries: bookData.entries || [] };
+      } catch { return { manifest, entries:[] }; }
+    }
     const bookData = await getJSON(resolveFromManifest(manifestPath, bookInfo.file));
     return { manifest, entries:(bookData.entries || []).filter(entry => {
       const start=entry.reference.chapterStart, end=entry.reference.chapterEnd ?? start;
