@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     next: document.getElementById('nextChapter'),
     versionInput: document.getElementById('mainVersionInput'),
     versionDropdown: document.getElementById('versionDropdown'),
+    nativeVersionSelect: document.getElementById('nativeVersionSelect'),
     list: document.getElementById('verseList'),
     eyebrow: document.querySelector('.chapter-eyebrow'),
     title: document.querySelector('.chapter-title'),
@@ -152,10 +153,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       btn.classList.toggle('version-lang-tab--active', btn.dataset.lang === bibleLangFilter);
     });
     els.versionInput.value = cur?.label || currentVersion || '';
+    // Select nativo en móvil
+    if (els.nativeVersionSelect) {
+      els.nativeVersionSelect.innerHTML = all.map(v =>
+        `<option value="${escapeHTML(v.id)}"${v.id===currentVersion?' selected':''}>${escapeHTML(v.label)}</option>`
+      ).join('');
+    }
   }
 
   function openVersionDropdown() {
-    const all = bibleCatalog().filter(v => v.lang === bibleLangFilter);
+    const all = bibleCatalog(); // mostrar todas las versiones sin filtrar por idioma
     const raw = els.versionInput.value.toLowerCase();
     const list = raw ? all.filter(v => v.label.toLowerCase().includes(raw) || v.full.toLowerCase().includes(raw)) : all;
     els.versionDropdown.innerHTML = list.map(v =>
@@ -1142,6 +1149,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   els.book.addEventListener('change',async()=>{currentBook=els.book.value;currentChapter=1;await refreshChapters();await loadPassage();});
   els.chapter.addEventListener('change',async()=>{currentChapter=Number(els.chapter.value);updateNavButtons();await loadPassage();});
+  els.nativeVersionSelect?.addEventListener('change',()=>{ if(els.nativeVersionSelect.value) selectBibleVersion(els.nativeVersionSelect.value); });
   els.prev.addEventListener('click',()=>moveChapter(-1)); els.next.addEventListener('click',()=>moveChapter(1));
 
   // ── Swipe horizontal para cambiar capítulo en móvil ─────────────────────────

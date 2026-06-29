@@ -841,6 +841,7 @@ button:focus-visible,
 
   .version-picker { order: 1; }
   .version-picker__input { width: 90px; }
+  .version-picker__native-select { display: none; }
 
   .passage-picker {
     order: 2;
@@ -1283,8 +1284,31 @@ body[data-theme="rosewood"] {
 /* Navegación inferior móvil: primer toque revela la leyenda, segundo toque abre. */
 .mobile-tool-dock { display: none; }
 
+/* En móvil ocultar el picker custom y mostrar el select nativo */
+.version-picker__native-select { display: none; }
+
 @media (max-width: 760px) {
   :root { --mobile-dock-height: 76px; }
+
+  .version-picker__combo { display: none; }          /* ocultar input custom */
+  .version-picker__native-select {
+    display: block;
+    -webkit-appearance: none;
+    appearance: none;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--wine);
+    background: var(--paper-raised);
+    border: 1px solid var(--rule-strong);
+    border-radius: 8px;
+    padding: 5px 26px 5px 10px;
+    max-width: 110px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238B7355' stroke-width='1.4' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 9px center;
+    cursor: pointer;
+  }
 
   .library-rail,
   .app-body > .tab-rail { display: none; }
