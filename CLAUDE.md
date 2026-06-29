@@ -68,6 +68,16 @@ Objetivo: validar el contenido, no el producto completo. Login/cuentas NO forman
 - **API de IA (uso offline, generación de contenido):** Claude Sonnet 4.6.
 - El sitio HOY no tiene backend, ni base de datos, ni autenticación, ni APIs externas conectadas — es 100% estático. Confirmado por exploración del repositorio.
 
+## Estrategia de comentarios (decisión 2026-06-28)
+
+En lugar de traducir manualmente los 50+ libros pendientes de Matthew Henry, se adoptó la siguiente estrategia:
+1. **Módulo `matthew-henry-en`** — 66 libros extraídos del ZIP fuente (`matthew_henry.zip`) en inglés, verse-level real. El módulo ES (`matthew-henry-es`) se retira del registry; sus entradas de GEN/EXO de calidad están en git si se necesitan luego.
+2. **Botón EN/ES en el panel** — default español via traducción automática (MyMemory API + caché localStorage). Botón "EN" muestra el original.
+3. **ASV** — American Standard Version (en inglés) como segunda Biblia para vista bilingüe.
+4. **Nueva RV española (edición Verbo)** — versión propia basada en rva-1909, trabajada individualmente con Juan. La rva-1909 original no se borra.
+5. **Parser SWORD** — para desbloquear JFB, Clarke, Wesley, Calvin, KD, Barnes, TSK, Scofield.
+Ver PLAN.md en la raíz del repo para inventario completo y fases detalladas.
+
 ## Catálogo de fuentes disponibles (Archivos Verbo.zip)
 
 En la raíz del repo (sin comitear — es material de trabajo, no contenido final) está `Archivos Verbo.zip` (340 MB), con material en inglés ya descargado por Juan, organizado por Fuentes Oficiales de Recursos (CCEL, CrossWire/SWORD, Open Scriptures, STEPBible, GitHub — todo dominio público o licencia abierta, verificar caso por caso antes de usar comercialmente). Contiene, entre otros: comentarios completos de **Matthew Henry (MHC.zip), Barnes, Clarke, JFB, Wesley, Keil & Delitzsch (KD.zip), Scofield, TSK, Pulpit/PA**; diccionario **Strong hebreo y griego completos** (StrongsHebrew.zip, StrongsGreek.zip, strongs-master, HebrewLexicon-master); además ASV en inglés y datos lingüísticos (STEPBible-Data-master, morphological-lexicon-master). También dos documentos de contexto (`Fuentes Oficiales de Recursos.docx`, `Verbo_Resumen_Ejecutivo.docx`) — el resumen ejecutivo es del 22 de junio, un día ANTES del cambio de arquitectura (IA en vivo → generación previa offline); su plan de backend/Supabase/IA-por-clic quedó superado por la decisión ya registrada arriba, pero sus secciones de modelo de negocio (planes $5/$10/$20, proyección de costos de API) y meta-prompt siguen vigentes.
@@ -116,6 +126,6 @@ En la raíz del repo (sin comitear — es material de trabajo, no contenido fina
   - Profetas menores sin verse-sync: HOS (2), JOL (1), AMO (1), NAH (1), HAB (1), ZEP (1), HAG (1), MAL (1)
   - Epístolas NT sin verse-sync: 1CO (3), HEB (3), ROM (4), REV (4), 1JN (1)
 
-  **Siguiente prioridad:** verse-sync de MAT, MRK, LUK, JHN, ACT (Evangelios y Hechos), luego ROM, 1CO, HEB, REV, 1JN, y después los libros del AT con pocas entradas.
+  **⚠️ Estrategia cambiada (2026-06-28):** Se abandona la traducción manual del MH. Ver sección "Estrategia de comentarios" arriba. El módulo `matthew-henry-es` se retira del registry; se construye `matthew-henry-en` con los 66 libros del ZIP fuente + botón de traducción en el panel.
 
-  **Fix app.js comiteado (83bb693):** el panel de comentario carga directamente la nota del comentario activo al navegar a un verso, eliminando el selector intermedio que existía antes.
+  **Fix app.js comiteados:** `83bb693` (panel sin selector redundante), `4fea476` (scroll con delay 320ms para animación del panel).

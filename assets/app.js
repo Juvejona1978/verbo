@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let commentSyncTimer = null;
   let searchState = null;
   let currentCommentary = localStorage.getItem('verbo:lastCommentary') || null;
+  let commentaryLangPref = localStorage.getItem('verbo:commentaryLang') || 'es';
   let currentDictionary = localStorage.getItem('verbo:lastDictionary') || null;
   let currentExegesis = localStorage.getItem('verbo:lastExegesis') || null;
   let gospelData=null;
@@ -262,9 +263,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       els.panelTitle.textContent='Comentario';
       const installed=commentaryCatalog();
+      const currentManifest=catalog?.commentaries?.find(c=>c.manifest.id===currentCommentary)?.manifest;
+      const isEnglishCommentary=currentManifest?.language==='en';
       if(installed.length){
         const options=installed.map(c=>`<option value="${c.id}" ${c.id===currentCommentary?'selected':''}>${escapeHTML(c.label)}</option>`).join('');
-        els.panelToolbar.innerHTML=`<div class="compare-toolbar"><span class="compare-toolbar__label">Comentario</span><select class="compare-toolbar__select" id="commentarySelect">${options}</select></div>`;
+        const langBtn=isEnglishCommentary
+          ?`<button class="commentary-lang-btn ${commentaryLangPref==='en'?'commentary-lang-btn--active':''}" id="commentaryLangToggle" title="${commentaryLangPref==='en'?'Ver en español':'Ver en inglés'}">${commentaryLangPref==='en'?'EN':'ES'}</button>`
+          :'';
+        els.panelToolbar.innerHTML=`<div class="compare-toolbar"><span class="compare-toolbar__label">Comentario</span><select class="compare-toolbar__select" id="commentarySelect">${options}</select>${langBtn}</div>`;
         document.getElementById('commentarySelect')?.addEventListener('change', e=>{
           currentCommentary=e.target.value;
           localStorage.setItem('verbo:lastCommentary', currentCommentary);
@@ -273,15 +279,26 @@ document.addEventListener('DOMContentLoaded', async () => {
           const moduleInfo=selectedVerse?.commentaries?.find(c=>c.commentaryId===currentCommentary);
           renderPanel('comentario', moduleInfo?.noteIds?.[0] || null);
         });
+        document.getElementById('commentaryLangToggle')?.addEventListener('click', ()=>{
+          commentaryLangPref=commentaryLangPref==='es'?'en':'es';
+          localStorage.setItem('verbo:commentaryLang', commentaryLangPref);
+          renderPanel('comentario', focus, verseCommentaries, false);
+        });
       }
       if(verseCommentaries && verseCommentaries.length && !focus){
         const curNote=verseCommentaries.find(c=>c.commentaryId===currentCommentary);
         focus=curNote?.noteIds?.[0]||null;
       }
       const entries=Object.entries(data.notes).filter(([,note])=>note.commentaryId===currentCommentary);
-      els.panelBody.innerHTML=entries.length?entries.map(([id,n])=>`<div class="note-card" data-note-id="${id}"><div class="note-card__ref">${data.meta.book} ${data.meta.chapter}</div><div class="note-card__title">${n.title}</div><div class="note-card__author">${n.author}</div><button class="note-card__copy" type="button" data-copy-note="${id}">Copiar comentario</button><div class="note-card__body">${n.body}</div></div>`).join(''):emptyState('📖','Este capítulo todavía no tiene comentarios cargados.');
+      els.panelBody.innerHTML=entries.length?entries.map(([id,n])=>{
+        const bodyHtml=isEnglishCommentary&&commentaryLangPref==='es'
+          ? (tcacheGet(id)||`<p class="note-card__translating">Traduciendo…</p>${n.body}`)
+          : n.body;
+        return `<div class="note-card" data-note-id="${id}"><div class="note-card__ref">${data.meta.book} ${data.meta.chapter}</div><div class="note-card__title">${n.title}</div><div class="note-card__author">${n.author}</div><button class="note-card__copy" type="button" data-copy-note="${id}">Copiar comentario</button><div class="note-card__body">${bodyHtml}</div></div>`;
+      }).join(''):emptyState('📖','Este capítulo todavía no tiene comentarios cargados.');
       els.panelBody.querySelectorAll('[data-copy-note]').forEach(btn=>btn.addEventListener('click',()=>{ const note=data.notes[btn.dataset.copyNote]; if(note) copyToClipboard(`${note.title}\n${String(note.body).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()}`); }));
       if(focus){ if(delayScroll) setTimeout(()=>scrollCommentToNote(focus),320); else scrollCommentToNote(focus); }
+      if(isEnglishCommentary && commentaryLangPref==='es') setTimeout(()=>applyCommentaryTranslation(), 100);
     }
     if(tab==='comparar'){ els.panelTitle.textContent='Comparar versiones'; renderCompare(focus||activeVerse()); }
     if(tab==='diccionario') renderDictionaryPanel(focus || activeVerse());
@@ -339,6 +356,50 @@ document.addEventListener('DOMContentLoaded', async () => {
         <p class="license-page__footer">Verbo reconoce y agradece el trabajo de traductores, editores y proyectos bíblicos que hacen posible el estudio responsable de las Escrituras.</p>
       </section>`;
   }
+
+  // ── Translation (EN→ES) ────────────────────────────────────────────────────
+  const T_PREFIX = 'verbo:t:';
+  function tcacheGet(key){ try{ return JSON.parse(localStorage.getItem(T_PREFIX+key)); }catch{ return null; } }
+  function tcacheSet(key,val){ try{ localStorage.setItem(T_PREFIX+key, JSON.stringify(val)); }catch{} }
+  function htmlToPlainText(html){ return html.replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/\s+/g,' ').trim(); }
+
+  async function translateEntry(noteId, htmlContent){
+    const cached=tcacheGet(noteId); if(cached) return cached;
+    const text=htmlToPlainText(htmlContent);
+    if(!text || text.length<10) return htmlContent;
+    try{
+      const chunk=text.slice(0,4800);
+      const resp=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(chunk)}&langpair=en|es`);
+      if(!resp.ok) return htmlContent;
+      const json=await resp.json();
+      if(json.responseStatus!==200) return htmlContent;
+      const translated=json.responseData?.translatedText||text;
+      const result='<p>'+translated+'</p>';
+      tcacheSet(noteId, result);
+      return result;
+    }catch{ return htmlContent; }
+  }
+
+  async function applyCommentaryTranslation(){
+    if(commentaryLangPref==='en') return;
+    const manifest=catalog?.commentaries?.find(c=>c.manifest.id===currentCommentary)?.manifest;
+    if(manifest?.language!=='en') return;
+    const cards=[...els.panelBody.querySelectorAll('.note-card[data-note-id]')];
+    for(const card of cards){
+      const noteId=card.dataset.noteId;
+      const bodyEl=card.querySelector('.note-card__body');
+      if(!bodyEl||bodyEl.dataset.translated==='1') continue;
+      const note=data.notes[noteId];
+      if(!note) continue;
+      bodyEl.dataset.translated='pending';
+      const translated=await translateEntry(noteId, note.body);
+      if(bodyEl.dataset.translated==='pending'){
+        bodyEl.innerHTML=translated;
+        bodyEl.dataset.translated='1';
+      }
+    }
+  }
+  // ─────────────────────────────────────────────────────────────────────────
 
   function scrollCommentToNote(noteId){
     const card = noteId ? els.panelBody.querySelector(`[data-note-id="${noteId}"]`) : null;
