@@ -147,7 +147,43 @@ body {
   letter-spacing: 0.6px;
 }
 
-.version-picker__select {
+.version-picker__combo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.version-lang-tabs {
+  display: flex;
+  gap: 2px;
+}
+
+.version-lang-tab {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 3px 6px;
+  border: 1.5px solid var(--rule-strong);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--sepia);
+  cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+  line-height: 1;
+}
+
+.version-lang-tab--active {
+  background: var(--wine-soft);
+  border-color: var(--wine-soft);
+  color: #fff;
+}
+
+.version-picker__field {
+  position: relative;
+}
+
+.version-picker__input {
   font-family: var(--font-body);
   font-size: 13.5px;
   font-weight: 600;
@@ -155,18 +191,57 @@ body {
   background: var(--paper-raised);
   border: 1px solid var(--rule-strong);
   border-radius: 8px;
-  padding: 5px 10px;
+  padding: 5px 26px 5px 10px;
   cursor: pointer;
-  appearance: none;
+  width: 120px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238B7355' stroke-width='1.4' fill='none'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 10px center;
-  padding-right: 26px;
+  background-position: right 9px center;
 }
 
-.version-picker__select:focus {
+.version-picker__input:focus {
   outline: none;
   border-color: var(--wine-soft);
+  cursor: text;
+}
+
+.version-picker__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule-strong);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.12);
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  z-index: 200;
+}
+
+.version-picker__option {
+  padding: 7px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--wine);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.version-picker__option:hover,
+.version-picker__option--active {
+  background: var(--paper-tint, #f5f0e8);
+}
+
+.version-picker__option-full {
+  font-size: 10.5px;
+  font-weight: 400;
+  color: var(--sepia);
 }
 
 /* ---------- Layout principal ---------- */
@@ -746,7 +821,7 @@ button:focus-visible,
   }
 
   .version-picker { order: 1; }
-  .version-picker__select { max-width: 145px; }
+  .version-picker__input { width: 90px; }
 
   .passage-picker {
     order: 2;

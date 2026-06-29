@@ -5,7 +5,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     chapter: document.getElementById('chapterSelect'),
     prev: document.getElementById('prevChapter'),
     next: document.getElementById('nextChapter'),
-    version: document.getElementById('mainVersionSelect'),
+    versionInput: document.getElementById('mainVersionInput'),
+    versionDropdown: document.getElementById('versionDropdown'),
     list: document.getElementById('verseList'),
     eyebrow: document.querySelector('.chapter-eyebrow'),
     title: document.querySelector('.chapter-title'),
@@ -31,6 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let searchState = null;
   let currentCommentary = localStorage.getItem('verbo:lastCommentary') || null;
   let commentaryLangPref = localStorage.getItem('verbo:commentaryLang') || 'es';
+  let bibleLangFilter = localStorage.getItem('verbo:bibleLang') || 'es';
   let currentDictionary = localStorage.getItem('verbo:lastDictionary') || null;
   let currentExegesis = localStorage.getItem('verbo:lastExegesis') || null;
   let gospelData=null;
@@ -54,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const emptyState = (icon, text) => `<div class="panel-empty"><div class="panel-empty__icon">${icon}</div><div class="panel-empty__text">${text}</div></div>`;
   const activeVerse = () => Number(document.querySelector('.verse--active')?.dataset.verseN) || null;
   const escapeHTML = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[ch]));
-  const bibleCatalog = () => catalog.bibles.map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path }));
+  const bibleCatalog = () => catalog.bibles.map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, lang:item.manifest.language || 'es' }));
   const commentaryCatalog = () => (catalog.commentaries || []).map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest }));
   // Léxico Strong: módulos numéricos (G1234 / H1234) consultados al tocar una etiqueta Strong en el texto.
   const isStrongLexicon = item => Boolean(item.manifest.strong);
@@ -139,8 +141,46 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function populateVersions() {
-    els.version.innerHTML = Object.entries(data.versions).map(([id,v]) => `<option value="${id}">${v.label}</option>`).join('');
-    els.version.value = currentVersion;
+    const all = bibleCatalog();
+    const cur = all.find(v => v.id === currentVersion);
+    if (cur && cur.lang !== bibleLangFilter) {
+      bibleLangFilter = cur.lang;
+      localStorage.setItem('verbo:bibleLang', bibleLangFilter);
+    }
+    document.querySelectorAll('.version-lang-tab').forEach(btn => {
+      btn.classList.toggle('version-lang-tab--active', btn.dataset.lang === bibleLangFilter);
+    });
+    els.versionInput.value = cur?.label || currentVersion || '';
+  }
+
+  function openVersionDropdown() {
+    const all = bibleCatalog().filter(v => v.lang === bibleLangFilter);
+    const raw = els.versionInput.value.toLowerCase();
+    const list = raw ? all.filter(v => v.label.toLowerCase().includes(raw) || v.full.toLowerCase().includes(raw)) : all;
+    els.versionDropdown.innerHTML = list.map(v =>
+      `<li class="version-picker__option${v.id===currentVersion?' version-picker__option--active':''}" data-id="${escapeHTML(v.id)}">${escapeHTML(v.label)}<span class="version-picker__option-full">${escapeHTML(v.full)}</span></li>`
+    ).join('');
+    els.versionDropdown.hidden = !list.length;
+    els.versionDropdown.querySelectorAll('li').forEach(li => {
+      li.addEventListener('mousedown', e => { e.preventDefault(); selectBibleVersion(li.dataset.id); });
+    });
+  }
+
+  function closeVersionDropdown() {
+    els.versionDropdown.hidden = true;
+    const cur = bibleCatalog().find(v => v.id === currentVersion);
+    els.versionInput.value = cur?.label || currentVersion || '';
+    els.versionInput.readOnly = true;
+  }
+
+  function selectBibleVersion(id) {
+    const v = activeVerse();
+    currentVersion = id;
+    if (compareVersion === currentVersion) compareVersion = Object.keys(data.versions).find(x => x !== currentVersion) || currentVersion;
+    closeVersionDropdown();
+    populateVersions();
+    renderChapter(v);
+    if (activeTab === 'comparar') renderCompare(v);
   }
 
   function renderChapter(restoreVerse=null) {
@@ -990,8 +1030,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   els.book.addEventListener('change',async()=>{currentBook=els.book.value;currentChapter=1;await refreshChapters();await loadPassage();});
   els.chapter.addEventListener('change',async()=>{currentChapter=Number(els.chapter.value);updateNavButtons();await loadPassage();});
-  els.version.addEventListener('change',()=>{const v=activeVerse();currentVersion=els.version.value;if(compareVersion===currentVersion)compareVersion=Object.keys(data.versions).find(x=>x!==currentVersion)||currentVersion;renderChapter(v);if(activeTab==='comparar')renderCompare(v);});
   els.prev.addEventListener('click',()=>moveChapter(-1)); els.next.addEventListener('click',()=>moveChapter(1));
+
+  els.versionInput.addEventListener('click',()=>{ els.versionInput.readOnly=false; els.versionInput.select(); openVersionDropdown(); });
+  els.versionInput.addEventListener('input',openVersionDropdown);
+  els.versionInput.addEventListener('blur',()=>setTimeout(closeVersionDropdown,150));
+  els.versionInput.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){ closeVersionDropdown(); els.versionInput.blur(); }
+    if(e.key==='Enter'){ const first=els.versionDropdown.querySelector('li'); if(first) selectBibleVersion(first.dataset.id); }
+  });
+
+  document.getElementById('versionLangTabs')?.addEventListener('click',e=>{
+    const btn=e.target.closest('.version-lang-tab'); if(!btn) return;
+    bibleLangFilter=btn.dataset.lang;
+    localStorage.setItem('verbo:bibleLang',bibleLangFilter);
+    document.querySelectorAll('.version-lang-tab').forEach(b=>b.classList.toggle('version-lang-tab--active',b.dataset.lang===bibleLangFilter));
+    const filtered=bibleCatalog().filter(v=>v.lang===bibleLangFilter);
+    if(!filtered.some(v=>v.id===currentVersion) && filtered.length) selectBibleVersion(filtered[0].id);
+    else if(!els.versionDropdown.hidden) openVersionDropdown();
+  });
   let armedMobileTool = null;
   let armedMobileTimer = null;
 
