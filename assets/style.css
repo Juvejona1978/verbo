@@ -247,13 +247,30 @@ body {
   padding: 0 32px;
 }
 
+/* Marca de app en reading pane — solo móvil */
+.reading-pane__app-mark {
+  display: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--wine);
+  opacity: 0.45;
+  margin-bottom: 10px;
+}
+
+@media (max-width: 760px) {
+  .reading-pane__app-mark { display: block; }
+}
+
 /* Zonas de navegación lateral (PC) — ocultas en móvil */
 .reading-pane__nav-zone { display: none; }
 
 @media (min-width: 761px) {
   .reading-pane {
     display: flex;
-    align-items: flex-start;
+    align-items: stretch;
     padding: 0;
   }
   .reading-pane__inner {
@@ -261,6 +278,7 @@ body {
     min-width: 0;
     margin: 0;
     padding: 48px 32px 120px;
+    align-self: flex-start;
   }
   .reading-pane__nav-zone {
     display: block;
@@ -270,6 +288,7 @@ body {
     -webkit-user-select: none;
     transition: background 0.2s;
     min-width: 0;
+    min-height: 100vh;
   }
   .reading-pane__nav-zone:hover { background: rgba(127,45,53,0.028); }
   .reading-pane__nav-glyph {
@@ -798,7 +817,7 @@ button:focus-visible,
     z-index: 1000;
   }
 
-  .reading-pane__inner { padding: 48px 20px 0; }
+  .reading-pane__inner { padding: 14px 20px 0; }
   .chapter-title { font-size: 26px; }
   .verse { font-size: 16.5px; }
 }

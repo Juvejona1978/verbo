@@ -1145,6 +1145,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   els.prev.addEventListener('click',()=>moveChapter(-1)); els.next.addEventListener('click',()=>moveChapter(1));
   document.querySelector('.reading-pane__nav-zone--prev')?.addEventListener('click',()=>moveChapter(-1));
   document.querySelector('.reading-pane__nav-zone--next')?.addEventListener('click',()=>moveChapter(1));
+  document.getElementById('readingPane')?.addEventListener('click',e=>{
+    if(window.innerWidth<=760) return;
+    const inner=document.querySelector('.reading-pane__inner');
+    if(!inner) return;
+    const r=inner.getBoundingClientRect();
+    if(e.clientX<r.left) moveChapter(-1);
+    else if(e.clientX>r.right) moveChapter(1);
+  });
 
   // ── Swipe horizontal para cambiar capítulo en móvil ─────────────────────────
   let swipeStartX=null, swipeStartY=null;
