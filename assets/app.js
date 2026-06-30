@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     chapter: document.getElementById('chapterSelect'),
     prev: document.getElementById('prevChapter'),
     next: document.getElementById('nextChapter'),
+    innerPrev: document.getElementById('innerPrev'),
+    innerNext: document.getElementById('innerNext'),
     versionInput: document.getElementById('mainVersionInput'),
     versionDropdown: document.getElementById('versionDropdown'),
     nativeVersionSelect: document.getElementById('nativeVersionSelect'),
@@ -18,17 +20,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     close: document.getElementById('panelClose'),
     search: document.getElementById('searchTrigger'),
     tabs: [...document.querySelectorAll('.tab-rail__btn, .library-rail__btn')],
-    selectionToolbar: document.getElementById('selectionToolbar'),
-    selectionCount: document.getElementById('selectionCount'),
-    copySelectionText: document.getElementById('copySelectionText'),
-    copySelectionRefs: document.getElementById('copySelectionRefs'),
-    clearSelection: document.getElementById('clearSelection'),
+    verseActionBar: document.getElementById('verseActionBar'),
+    copyVerseText: document.getElementById('copyVerseText'),
+    copyVerseRef: document.getElementById('copyVerseRef'),
+    closeVerseAction: document.getElementById('closeVerseAction'),
     backdrop: document.getElementById('sheetBackdrop')
   };
 
   let catalog, data, activeTab = null, currentVersion = null, compareVersion = null;
   let selectedVerses = new Set();
-  let copyMode = false;
+  let highlights = JSON.parse(localStorage.getItem('verbo:highlights') || '{}');
   let suppressCommentSync = false;
   let commentSyncTimer = null;
   let searchState = null;
@@ -56,6 +57,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const emptyState = (icon, text) => `<div class="panel-empty"><div class="panel-empty__icon">${icon}</div><div class="panel-empty__text">${text}</div></div>`;
   const activeVerse = () => Number(document.querySelector('.verse--active')?.dataset.verseN) || null;
+  const hlKey = (book, chapter, n) => `${book}:${chapter}:${n}`;
+  const saveHighlights = () => localStorage.setItem('verbo:highlights', JSON.stringify(highlights));
+  const HL_COLORS = ['hl-yellow','hl-green','hl-blue','hl-pink','hl-coral','hl-violet'];
   const escapeHTML = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[ch]));
   const bibleCatalog = () => catalog.bibles.map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, lang:item.manifest.language || 'es' }));
   const commentaryCatalog = () => (catalog.commentaries || []).map(item => ({ id:item.manifest.id, label:item.manifest.abbreviation || item.manifest.name, full:item.manifest.name, path:item.path, manifest:item.manifest }));
@@ -127,9 +131,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       compareVersion = compareVersion && availableCompare.some(v => v.id === compareVersion)
         ? compareVersion : preferredCompare;
       populateVersions();
-      selectedVerses.clear(); copyMode=false;
+      selectedVerses.clear();
       renderChapter();
-      updateSelectionToolbar();
+      updateActionBar();
       localStorage.setItem('verbo:lastBook', currentBook);
       localStorage.setItem('verbo:lastChapter', String(currentChapter));
       gospelOpenChapter=null;
@@ -221,6 +225,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const row = document.createElement('div'); row.className='verse'; row.dataset.verseN=v.n;
       if (v.n === restoreVerse) row.classList.add('verse--active');
       if (selectedVerses.has(v.n)) row.classList.add('verse--selected');
+      const savedHl = highlights[hlKey(currentBook, currentChapter, v.n)];
+      if (savedHl) row.classList.add(savedHl);
       const num=document.createElement('span'); num.className='verse__num'; num.textContent=v.n;
       const text=document.createElement('span'); text.className='verse__text'+(v.hasNote?' verse__text--has-note':''); text.tabIndex=0;
       const verseSegments=v.segments?.[currentVersion];
@@ -252,19 +258,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         row.appendChild(indicator);
       }
       row.appendChild(margin); els.list.appendChild(row);
-      text.addEventListener('click',(e)=>{
-        if(e.ctrlKey){ copyMode=true; }
-        selectVerse(row,v);
-      });
-      text.addEventListener('contextmenu',(e)=>{
-        e.preventDefault();
-        copyMode=true;
-        selectVerse(row,v);
-      });
-      let pressTimer=null;
-      text.addEventListener('touchstart',()=>{ pressTimer=setTimeout(()=>{ copyMode=true; selectVerse(row,v); },600); });
-      text.addEventListener('touchend',()=>clearTimeout(pressTimer));
-      text.addEventListener('touchmove',()=>clearTimeout(pressTimer));
+      text.addEventListener('click',()=>{ selectVerse(row,v); });
+      text.addEventListener('contextmenu',(e)=>{ e.preventDefault(); selectVerse(row,v); });
       text.querySelectorAll('.strongs-tag').forEach(tag=>tag.addEventListener('click',e=>{e.stopPropagation(); openDictionary(tag.dataset.strongCode);}));
     });
   }
@@ -272,25 +267,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   function selectVerse(row, verse) {
     document.querySelectorAll('.verse--active').forEach(x=>x.classList.remove('verse--active'));
     row.classList.add('verse--active');
-    if(copyMode){
-      if(selectedVerses.has(verse.n)) selectedVerses.delete(verse.n); else selectedVerses.add(verse.n);
-      row.classList.toggle('verse--selected', selectedVerses.has(verse.n));
-      updateSelectionToolbar();
-    }
+    if(selectedVerses.has(verse.n)) selectedVerses.delete(verse.n); else selectedVerses.add(verse.n);
+    row.classList.toggle('verse--selected', selectedVerses.has(verse.n));
+    updateActionBar();
     const firstNote=verse.commentaries?.find(c=>c.commentaryId===currentCommentary)?.noteIds?.[0]||null;
-    // No abrir comentarios automáticamente al tocar un versículo.
-    // En móvil el panel invade la lectura; el usuario lo abre manualmente desde el botón lateral.
     if (activeTab === 'comentario') renderPanel('comentario', firstNote);
     if (activeTab === 'comparar') renderCompare(verse.n);
     if (activeTab === 'diccionario') renderPanel('diccionario', verse.n);
     if (activeTab === 'exegesis') renderPanel('exegesis', verse.n);
   }
 
-  function updateSelectionToolbar(){
-    const count=selectedVerses.size;
-    if(!els.selectionToolbar) return;
-    els.selectionToolbar.hidden = count === 0;
-    if(els.selectionCount) els.selectionCount.textContent = count === 1 ? '1 versículo seleccionado' : `${count} versículos seleccionados`;
+  function updateActionBar(){
+    if(!els.verseActionBar) return;
+    els.verseActionBar.hidden = selectedVerses.size === 0;
   }
 
   function selectedVerseNumbers(){ return [...selectedVerses].sort((a,b)=>a-b); }
@@ -1127,7 +1116,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       wireDictionaryLinks(els.panelBody);
     }catch(error){console.error(error);els.panelBody.innerHTML=emptyState('⚠️','No se pudo abrir esta entrada del diccionario.');}
   }
-  function updateNavButtons(){ const idx=catalog.books.findIndex(b=>b.id===currentBook); els.prev.disabled=idx===0&&currentChapter===1; els.next.disabled=idx===catalog.books.length-1&&currentChapter===els.chapter.options.length; }
+  function updateNavButtons(){ const idx=catalog.books.findIndex(b=>b.id===currentBook); const atStart=idx===0&&currentChapter===1; const atEnd=idx===catalog.books.length-1&&currentChapter===els.chapter.options.length; els.prev.disabled=atStart; els.next.disabled=atEnd; if(els.innerPrev) els.innerPrev.disabled=atStart; if(els.innerNext) els.innerNext.disabled=atEnd; }
   async function moveChapter(delta){
     const idx=catalog.books.findIndex(b=>b.id===currentBook), count=els.chapter.options.length;
     if(delta<0&&currentChapter>1) currentChapter--; else if(delta>0&&currentChapter<count) currentChapter++; else {
@@ -1143,16 +1132,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   els.chapter.addEventListener('change',async()=>{currentChapter=Number(els.chapter.value);updateNavButtons();await loadPassage();});
   els.nativeVersionSelect?.addEventListener('change',()=>{ if(els.nativeVersionSelect.value) selectBibleVersion(els.nativeVersionSelect.value); });
   els.prev.addEventListener('click',()=>moveChapter(-1)); els.next.addEventListener('click',()=>moveChapter(1));
-  document.querySelector('.reading-pane__nav-zone--prev')?.addEventListener('click',()=>moveChapter(-1));
-  document.querySelector('.reading-pane__nav-zone--next')?.addEventListener('click',()=>moveChapter(1));
-  document.getElementById('readingPane')?.addEventListener('click',e=>{
-    if(window.innerWidth<=760) return;
-    const inner=document.querySelector('.reading-pane__inner');
-    if(!inner) return;
-    const r=inner.getBoundingClientRect();
-    if(e.clientX<r.left) moveChapter(-1);
-    else if(e.clientX>r.right) moveChapter(1);
-  });
+  els.innerPrev?.addEventListener('click',()=>moveChapter(-1));
+  els.innerNext?.addEventListener('click',()=>moveChapter(1));
 
   // ── Swipe horizontal para cambiar capítulo en móvil ─────────────────────────
   let swipeStartX=null, swipeStartY=null;
@@ -1168,6 +1149,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     if(Math.abs(dx)<60||dy>Math.abs(dx)/2||activeTab) return;
     if(window.innerWidth>760) return;
     moveChapter(dx<0?1:-1);
+  });
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  // ── Teclado ← → para cambiar capítulo en desktop ────────────────────────────
+  document.addEventListener('keydown', e => {
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT') return;
+    if(e.altKey||e.ctrlKey||e.metaKey) return;
+    if(e.key==='ArrowLeft') { e.preventDefault(); moveChapter(-1); }
+    else if(e.key==='ArrowRight') { e.preventDefault(); moveChapter(1); }
   });
   // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1205,8 +1195,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   }));
   els.search.addEventListener('click',()=>openPanel('buscar'));
   els.close.addEventListener('click',closePanel);
-  els.copySelectionText?.addEventListener('click',copySelectedText);
-  els.copySelectionRefs?.addEventListener('click',copySelectedReferences);
-  els.clearSelection?.addEventListener('click',()=>{ selectedVerses.clear(); copyMode=false; document.querySelectorAll('.verse--selected').forEach(x=>x.classList.remove('verse--selected')); updateSelectionToolbar(); });
+  els.copyVerseText?.addEventListener('click', copySelectedText);
+  els.copyVerseRef?.addEventListener('click', copySelectedReferences);
+  els.closeVerseAction?.addEventListener('click', ()=>{
+    selectedVerses.clear();
+    document.querySelectorAll('.verse--selected').forEach(x=>x.classList.remove('verse--selected'));
+    updateActionBar();
+  });
+  document.querySelectorAll('.verse-swatch').forEach(swatch=>{
+    swatch.addEventListener('click', ()=>{
+      const color = swatch.dataset.color;
+      selectedVerses.forEach(n=>{
+        const key = hlKey(currentBook, currentChapter, n);
+        if(color){ highlights[key]=color; } else { delete highlights[key]; }
+        const row = els.list.querySelector(`[data-verse-n="${n}"]`);
+        if(row){
+          row.classList.remove(...HL_COLORS);
+          if(color) row.classList.add(color);
+        }
+      });
+      saveHighlights();
+    });
+  });
   window.addEventListener('scroll',()=>{ clearTimeout(commentSyncTimer); commentSyncTimer=setTimeout(syncCommentToReading,120); }, {passive:true});
 });
