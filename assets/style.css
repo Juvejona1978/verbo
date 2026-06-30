@@ -827,7 +827,7 @@ button:focus-visible,
   }
 
   .app-header__brand {
-    min-width: 0;
+    display: none;
   }
 
   .app-header__nav {

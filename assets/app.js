@@ -1152,12 +1152,38 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   // ─────────────────────────────────────────────────────────────────────────────
 
-  // ── Teclado ← → para cambiar capítulo en desktop ────────────────────────────
+  // ── Teclado en desktop ───────────────────────────────────────────────────────
   document.addEventListener('keydown', e => {
     if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT') return;
     if(e.altKey||e.ctrlKey||e.metaKey) return;
     if(e.key==='ArrowLeft') { e.preventDefault(); moveChapter(-1); }
     else if(e.key==='ArrowRight') { e.preventDefault(); moveChapter(1); }
+    else if(e.key==='ArrowUp'||e.key==='ArrowDown') {
+      e.preventDefault();
+      const rows=[...document.querySelectorAll('.verse')];
+      if(!rows.length) return;
+      const cur=document.querySelector('.verse--active');
+      const curIdx=cur?rows.indexOf(cur):-1;
+      const nextIdx=e.key==='ArrowDown'?Math.min(curIdx+1,rows.length-1):Math.max(curIdx-1,0);
+      const nextRow=rows[nextIdx];
+      document.querySelectorAll('.verse--active').forEach(x=>x.classList.remove('verse--active'));
+      nextRow.classList.add('verse--active');
+      nextRow.scrollIntoView({block:'nearest'});
+      if(activeTab==='comentario'||activeTab==='comparar'||activeTab==='diccionario'||activeTab==='exegesis'){
+        const n=Number(nextRow.dataset.verseN);
+        const verse=data?.verses?.find(v=>v.n===n);
+        if(verse) selectVerse(nextRow,verse);
+      }
+    }
+    else if(e.key==='Enter') {
+      const cur=document.querySelector('.verse--active');
+      if(!cur) return;
+      const n=Number(cur.dataset.verseN);
+      const verse=data?.verses?.find(v=>v.n===n);
+      if(verse) selectVerse(cur,verse);
+    }
+    else if(e.key==='Escape') { if(activeTab) closePanel(); }
+    else if(e.key==='/') { e.preventDefault(); openPanel('buscar'); }
   });
   // ─────────────────────────────────────────────────────────────────────────────
 

@@ -78,20 +78,16 @@
     </nav>
 
     <main class="reading-pane" id="readingPane">
-      <div class="reading-pane__nav-zone reading-pane__nav-zone--prev" aria-hidden="true"><span class="reading-pane__nav-glyph">‹</span></div>
       <div class="reading-pane__inner">
         <div class="reading-pane__app-mark" aria-hidden="true">Verbo</div>
         <div class="chapter-eyebrow"></div>
-        <h1 class="chapter-title"></h1>
-        <div class="selection-toolbar" id="selectionToolbar" hidden>
-          <span class="selection-toolbar__count" id="selectionCount"></span>
-          <button class="selection-toolbar__btn" id="copySelectionText" type="button">Copiar texto</button>
-          <button class="selection-toolbar__btn" id="copySelectionRefs" type="button">Copiar refs</button>
-          <button class="selection-toolbar__btn selection-toolbar__btn--ghost" id="clearSelection" type="button">Limpiar</button>
+        <div class="chapter-title-row">
+          <button class="chapter-nav-btn" id="innerPrev" type="button" aria-label="Capítulo anterior">‹</button>
+          <h1 class="chapter-title"></h1>
+          <button class="chapter-nav-btn chapter-nav-btn--next" id="innerNext" type="button" aria-label="Capítulo siguiente">›</button>
         </div>
         <div id="verseList"></div>
       </div>
-      <div class="reading-pane__nav-zone reading-pane__nav-zone--next" aria-hidden="true"><span class="reading-pane__nav-glyph">›</span></div>
     </main>
 
     <div class="sheet-backdrop" id="sheetBackdrop"></div>
@@ -195,6 +191,21 @@
         <span class="mobile-tool-label">Fuentes y licencias</span>
       </button>
     </nav>
+
+  <div class="verse-action-bar" id="verseActionBar" hidden>
+    <button class="verse-swatch" data-color="hl-yellow" aria-label="Amarillo" title="Resaltar amarillo"></button>
+    <button class="verse-swatch" data-color="hl-green"  aria-label="Verde"    title="Resaltar verde"></button>
+    <button class="verse-swatch" data-color="hl-blue"   aria-label="Azul"     title="Resaltar azul"></button>
+    <button class="verse-swatch" data-color="hl-pink"   aria-label="Rosa"     title="Resaltar rosa"></button>
+    <button class="verse-swatch" data-color="hl-coral"  aria-label="Coral"    title="Resaltar coral"></button>
+    <button class="verse-swatch" data-color="hl-violet" aria-label="Violeta"  title="Resaltar violeta"></button>
+    <button class="verse-swatch verse-swatch--erase" data-color="" aria-label="Quitar resaltado" title="Quitar resaltado">✕</button>
+    <div class="verse-action-bar__sep"></div>
+    <button class="verse-action-btn" id="copyVerseText" type="button">Copiar</button>
+    <button class="verse-action-btn verse-action-btn--secondary" id="copyVerseRef" type="button">Ref.</button>
+    <div class="verse-action-bar__sep"></div>
+    <button class="verse-action-bar__close" id="closeVerseAction" type="button" aria-label="Cerrar">✕</button>
+  </div>
 
   <script src="assets/module-loader.js"></script>
   <script src="assets/app.js"></script>
