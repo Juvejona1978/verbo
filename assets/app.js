@@ -1143,6 +1143,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   els.chapter.addEventListener('change',async()=>{currentChapter=Number(els.chapter.value);updateNavButtons();await loadPassage();});
   els.nativeVersionSelect?.addEventListener('change',()=>{ if(els.nativeVersionSelect.value) selectBibleVersion(els.nativeVersionSelect.value); });
   els.prev.addEventListener('click',()=>moveChapter(-1)); els.next.addEventListener('click',()=>moveChapter(1));
+  document.querySelector('.reading-pane__nav-zone--prev')?.addEventListener('click',()=>moveChapter(-1));
+  document.querySelector('.reading-pane__nav-zone--next')?.addEventListener('click',()=>moveChapter(1));
 
   // ── Swipe horizontal para cambiar capítulo en móvil ─────────────────────────
   let swipeStartX=null, swipeStartY=null;
