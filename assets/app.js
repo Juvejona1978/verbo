@@ -385,7 +385,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const langBtn=isEnglishCommentary
           ?`<button class="commentary-lang-btn ${commentaryLangPref==='en'?'commentary-lang-btn--active':''}" id="commentaryLangToggle" title="${commentaryLangPref==='en'?'Ver en español':'Ver en inglés'}">${commentaryLangPref==='en'?'ES ↩':'EN ↗'}</button>`
           :'';
-        els.panelToolbar.innerHTML=`<div class="compare-toolbar"><span class="compare-toolbar__label">Comentario</span><select class="compare-toolbar__select" id="commentarySelect">${options}</select>${langBtn}</div>`;
+        els.panelToolbar.innerHTML=`<div class="compare-toolbar"><select class="compare-toolbar__select" id="commentarySelect">${options}</select>${langBtn}</div>`;
         document.getElementById('commentarySelect')?.addEventListener('change', e=>{
           currentCommentary=e.target.value;
           localStorage.setItem('verbo:lastCommentary', currentCommentary);
