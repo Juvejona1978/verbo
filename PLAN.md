@@ -46,7 +46,6 @@ Todos son **comentarios completos en inglés** de alta calidad histórica, domin
 | Recurso | Cobertura | Valor pastoral | Tamaño ZIP |
 |---------|-----------|----------------|-----------|
 | **JFB** (Jamieson-Fausset-Brown) | 66 libros | ⭐⭐⭐ clásico evangélico | 5.7 MB |
-| **Clarke's Commentary** | 66 libros | ⭐⭐⭐ metodista erudito | 8.6 MB |
 | **Wesley's Explanatory Notes** | 66 libros | ⭐⭐ pietismo wesleyano | 1.9 MB |
 | **Calvin Commentaries** | ~50 libros | ⭐⭐⭐ reforma reformada | 20.9 MB |
 | **Keil & Delitzsch (KD)** | AT completo | ⭐⭐⭐ exégesis hebrea clásica | 11.2 MB |
@@ -120,7 +119,7 @@ Todos son **comentarios completos en inglés** de alta calidad histórica, domin
 ### FASE 3 — Parser SWORD para comentarios del Grupo B
 
 **Qué:** Escribir decoder Python para formato SWORD zcom4 (`.bzs` = índices, `.bzv` = datos bzip2)
-**Por qué:** Desbloquea JFB, Clarke, Wesley, Calvin, KD, Barnes, TSK, Scofield — 8 comentarios completos en un solo paso
+**Por qué:** Desbloquea JFB, Wesley, Calvin, KD, Barnes, TSK, Scofield — 7 comentarios completos en un solo paso
 **Cómo:** El formato SWORD zcom tiene bloques de 200 versículos. Cada bloque está comprimido con bzip2. El `.bzs` contiene los offsets. Con esto se puede leer cualquier versículo sin la librería SWORD.
 **Entregable:** `tools/sword_reader.py` + módulos JSON para los 8+ comentarios
 
